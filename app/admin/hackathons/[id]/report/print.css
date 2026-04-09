@@ -1,0 +1,215 @@
+/* Print-specific styles for report PDF export */
+
+@media print {
+  /* Hide navigation and non-essential elements */
+  nav,
+  .no-print,
+  button:not(.print-keep) {
+    display: none !important;
+  }
+
+  /* Page setup */
+  @page {
+    size: A4;
+    margin: 1.5cm 2cm;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+  }
+
+  /* Prevent page breaks inside important elements */
+  .page-break-inside-avoid {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Force page breaks */
+  .page-break-before {
+    page-break-before: always;
+    break-before: always;
+  }
+
+  .page-break-after {
+    page-break-after: always;
+    break-after: always;
+  }
+
+  /* Executive Summary - full page */
+  #executive-summary {
+    page-break-after: always;
+    break-after: always;
+  }
+
+  /* Remove shadows and adjust colors for print */
+  .shadow-xl,
+  .shadow-lg,
+  .shadow-md,
+  .shadow-sm {
+    box-shadow: none !important;
+    border: 1px solid #e2e8f0;
+  }
+
+  /* Ensure backgrounds print */
+  .bg-gradient-to-br,
+  .bg-gradient-to-r,
+  .bg-blue-50,
+  .bg-slate-50,
+  .bg-emerald-50,
+  .bg-violet-50,
+  .bg-amber-50 {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Charts should be visible */
+  svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Table improvements */
+  table {
+    page-break-inside: avoid;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  /* Adjust font sizes for print */
+  h1 {
+    font-size: 24pt;
+  }
+
+  h2 {
+    font-size: 18pt;
+  }
+
+  h3 {
+    font-size: 14pt;
+  }
+
+  body,
+  p,
+  td,
+  th {
+    font-size: 10pt;
+    line-height: 1.4;
+  }
+
+  /* Remove hover effects */
+  *:hover {
+    background-color: inherit !important;
+  }
+
+  /* Optimize spacing */
+  .mb-12 {
+    margin-bottom: 2rem;
+  }
+
+  .mb-8 {
+    margin-bottom: 1.5rem;
+  }
+
+  .mb-6 {
+    margin-bottom: 1rem;
+  }
+
+  /* Hide interactive elements */
+  .hover\:bg-slate-50,
+  .hover\:text-slate-800,
+  .transition-colors,
+  .cursor-pointer {
+    cursor: default;
+  }
+
+  /* Breadcrumbs and navigation */
+  .breadcrumb {
+    font-size: 8pt;
+    color: #64748b;
+  }
+
+  /* Links */
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  /* Heatmap optimizations */
+  .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  /* Ensure sticky columns work in print */
+  .sticky {
+    position: relative !important;
+  }
+
+  /* Charts container */
+  .recharts-wrapper {
+    page-break-inside: avoid;
+  }
+
+  /* Footer info */
+  .print-footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 8pt;
+    color: #94a3b8;
+    padding: 0.5rem 0;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  /* Header for each page after first */
+  .print-header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: white;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 8pt;
+    color: #64748b;
+  }
+
+  /* Avoid widows and orphans */
+  p,
+  h2,
+  h3 {
+    widows: 3;
+    orphans: 3;
+  }
+
+  /* Grid adjustments for print */
+  .grid {
+    display: grid;
+    grid-gap: 0.5rem;
+  }
+
+  /* Competency heatmap table adjustments */
+  .heatmap-table {
+    font-size: 8pt;
+  }
+
+  .heatmap-table th,
+  .heatmap-table td {
+    padding: 0.25rem;
+  }
+}
+
+/* Screen-only styles for export button */
+@media screen {
+  .print-only {
+    display: none;
+  }
+}
