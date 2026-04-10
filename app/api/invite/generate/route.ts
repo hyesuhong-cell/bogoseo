@@ -4,7 +4,8 @@ import { generateInviteToken } from '@/lib/inviteToken';
 
 export async function POST(req: NextRequest) {
   const session = await auth();
-  if (!session || (session.user as { role?: string }).role !== 'admin') {
+  const role = (session?.user as { role?: string })?.role;
+  if (!session || (role !== 'admin' && role !== 'superadmin')) {
     return NextResponse.json({ error: '권한이 없습니다.' }, { status: 401 });
   }
 

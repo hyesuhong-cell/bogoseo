@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { verifyInviteToken } from '@/lib/inviteToken';
 import { saveUser, isStudentIdTaken } from '@/lib/userStore';
 import { mockHackathons } from '@/lib/mockData';
+import { getHackathon } from '@/lib/hackathonStore';
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,9 +15,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '유효하지 않은 초대 링크입니다.' }, { status: 400 });
     }
 
-    // 2. 해커톤 존재 확인
-    const hackathon = mockHackathons.find(h => h.id === tokenData.hackathonId);
-    if (!hackathon) {
+    // 2. 해커톤 존재 확인 (mockData → DB)
+    const mockH = mockHackathons.find(h => h.id === tokenData.hackathonId);
+    const dbH = mockH ? null : await getHackathon(tokenData.hackathonId);
+    if (!mockH && !dbH) {
       return NextResponse.json({ error: '해당 해커톤을 찾을 수 없습니다.' }, { status: 404 });
     }
 
@@ -47,7 +49,8 @@ export async function POST(req: NextRequest) {
       registeredAt: new Date().toISOString(),
     });
 
-    return NextResponse.json({ ok: true, hackathonName: hackathon.name });
+    const hackathonName = (mockH ?? dbH)!.name;
+    return NextResponse.json({ ok: true, hackathonName });
   } catch (e) {
     console.error(e);
     return NextResponse.json({ error: '서버 오류가 발생했습니다.' }, { status: 500 });
