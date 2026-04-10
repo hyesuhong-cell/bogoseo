@@ -3,6 +3,7 @@ import { mockHackathons, mockParticipants, mockTeams } from '@/lib/mockData';
 import { listHackathons } from '@/lib/hackathonStore';
 import { countParticipantsPerHackathon } from '@/lib/userStore';
 import { auth } from '@/auth';
+import HackathonManageActions from '@/components/HackathonManageActions';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,8 +25,8 @@ export default async function HackathonsPage() {
 
   // 통합 목록 (DB 우선, mock 후)
   const allHackathons = [
-    ...dbHackathons.map(h => ({ ...h, isDb: true })),
-    ...mockOnly.map(h => ({ ...h, startDate: h.startDate, endDate: h.endDate, isDb: false })),
+    ...dbHackathons.map(h => ({ ...h, theme: h.theme ?? '', venue: h.venue ?? '', isDb: true })),
+    ...mockOnly.map(h => ({ ...h, theme: (h as { theme?: string }).theme ?? '', venue: h.venue ?? '', isDb: false })),
   ];
 
   // DB 해커톤별 참가자 수
@@ -131,6 +132,9 @@ export default async function HackathonsPage() {
                     <Link href={`/admin/hackathons/${h.id}/report`} className="border border-blue-200 text-blue-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors text-center">
                       성과 리포트
                     </Link>
+                    {role === 'superadmin' && (
+                      <HackathonManageActions hackathon={h} />
+                    )}
                   </div>
                 </div>
               </div>

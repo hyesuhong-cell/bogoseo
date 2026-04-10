@@ -121,3 +121,26 @@ export async function getHackathon(id: string): Promise<HackathonRecord | null> 
 export async function updateHackathonStatus(id: string, status: 'upcoming' | 'ongoing' | 'completed') {
   await supabase.from('hackathons').update({ status }).eq('id', id);
 }
+
+export async function updateHackathon(
+  id: string,
+  updates: Partial<Pick<HackathonRecord, 'name' | 'status' | 'category' | 'theme' | 'startDate' | 'endDate' | 'venue' | 'university'>>
+) {
+  const payload: Record<string, string> = {};
+  if (updates.name !== undefined) payload.name = updates.name;
+  if (updates.status !== undefined) payload.status = updates.status;
+  if (updates.category !== undefined) payload.category = updates.category;
+  if (updates.theme !== undefined) payload.theme = updates.theme;
+  if (updates.startDate !== undefined) payload.start_date = updates.startDate;
+  if (updates.endDate !== undefined) payload.end_date = updates.endDate;
+  if (updates.venue !== undefined) payload.venue = updates.venue;
+  if (updates.university !== undefined) payload.university = updates.university;
+
+  const { error } = await supabase.from('hackathons').update(payload).eq('id', id);
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteHackathon(id: string) {
+  const { error } = await supabase.from('hackathons').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+}
