@@ -44,6 +44,7 @@ export interface Participant {
   postScore?: DiagnosisScore;
   surveyCompleted: boolean;
   registeredAt: string;
+  passwordHash?: string; // bcrypt 해시 (없으면 학번이 초기 비밀번호)
 }
 
 export interface DiagnosisScore {

@@ -1,0 +1,65 @@
+import type { NextAuthConfig } from 'next-auth';
+
+export const authConfig = {
+  pages: {
+    signIn: '/login',
+  },
+  callbacks: {
+    authorized({ auth, request: { nextUrl } }) {
+      const isLoggedIn = !!auth?.user;
+      const role = (auth?.user as { role?: string })?.role;
+      const path = nextUrl.pathname;
+
+      // 관리자 로그인 페이지
+      if (path === '/admin/login') {
+        if (isLoggedIn && role === 'admin') {
+          return Response.redirect(new URL('/admin', nextUrl));
+        }
+        return true;
+      }
+
+      // 참가자 로그인 페이지
+      if (path === '/participant/login') {
+        if (isLoggedIn && role === 'participant') {
+          return Response.redirect(new URL('/participant', nextUrl));
+        }
+        return true;
+      }
+
+      // 관리자 전용 페이지
+      if (path.startsWith('/admin')) {
+        if (!isLoggedIn || role !== 'admin') {
+          return Response.redirect(new URL('/admin/login', nextUrl));
+        }
+        return true;
+      }
+
+      // 참가자 전용 페이지
+      if (path.startsWith('/participant')) {
+        if (!isLoggedIn || role !== 'participant') {
+          return Response.redirect(new URL('/participant/login', nextUrl));
+        }
+        return true;
+      }
+
+      return true;
+    },
+    jwt({ token, user }) {
+      if (user) {
+        token.role = (user as { role?: string }).role;
+        token.studentId = (user as { studentId?: string }).studentId;
+        token.participantId = (user as { participantId?: string }).participantId;
+      }
+      return token;
+    },
+    session({ session, token }) {
+      if (token) {
+        (session.user as { role?: string }).role = token.role as string;
+        (session.user as { studentId?: string }).studentId = token.studentId as string;
+        (session.user as { participantId?: string }).participantId = token.participantId as string;
+      }
+      return session;
+    },
+  },
+  providers: [],
+} satisfies NextAuthConfig;

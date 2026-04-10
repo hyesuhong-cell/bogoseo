@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { signOut, useSession } from 'next-auth/react';
 
 const navItems = [
   {
@@ -25,6 +26,7 @@ const navItems = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   return (
     <aside className="w-60 bg-slate-900 min-h-screen flex flex-col">
@@ -61,13 +63,34 @@ export default function AdminSidebar() {
       </nav>
 
       {/* 하단 */}
-      <div className="p-4 border-t border-slate-700">
+      <div className="p-4 border-t border-slate-700 space-y-3">
+        {/* 로그인 계정 정보 */}
+        {session?.user && (
+          <div className="flex items-center gap-2.5 px-1">
+            <div className="w-7 h-7 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 text-xs font-bold flex-shrink-0">
+              {session.user.name?.[0] ?? 'A'}
+            </div>
+            <div className="min-w-0">
+              <div className="text-white text-xs font-medium truncate">{session.user.name}</div>
+              <div className="text-slate-500 text-[10px] truncate">{session.user.email}</div>
+            </div>
+          </div>
+        )}
         <Link href="/" className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 17l-5-5m0 0l5-5m-5 5h12" />
           </svg>
           홈으로
         </Link>
+        <button
+          onClick={() => signOut({ callbackUrl: '/admin/login' })}
+          className="flex items-center gap-2 text-slate-400 hover:text-red-400 text-sm transition-colors w-full"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          로그아웃
+        </button>
       </div>
     </aside>
   );
