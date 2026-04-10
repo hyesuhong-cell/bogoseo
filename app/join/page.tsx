@@ -8,6 +8,19 @@ const MAJORS = [
   '경영학', '경제학', '산업공학', '디자인학', '심리학', '기타',
 ];
 
+const inputClass = (err?: string) =>
+  `w-full border ${err ? 'border-red-300' : 'border-slate-200'} text-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-colors`;
+
+function Field({ label, id, error, children }: { label: string; id: string; error?: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label htmlFor={id} className="block text-xs font-medium text-slate-500 mb-1.5">{label}</label>
+      {children}
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+    </div>
+  );
+}
+
 function JoinForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -119,17 +132,6 @@ function JoinForm() {
       </div>
     );
   }
-
-  const Field = ({ label, id, error, children }: { label: string; id: string; error?: string; children: React.ReactNode }) => (
-    <div>
-      <label htmlFor={id} className="block text-xs font-medium text-slate-500 mb-1.5">{label}</label>
-      {children}
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
-    </div>
-  );
-
-  const inputClass = (err?: string) =>
-    `w-full border ${err ? 'border-red-300' : 'border-slate-200'} text-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-colors`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 flex items-center justify-center p-4 py-10">
