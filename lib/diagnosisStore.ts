@@ -93,7 +93,8 @@ export async function getHackathonDiagnosisStats(hackathonIds: string[]): Promis
   const postIds = new Set(post.map(d => d.participant_id));
   const diagnosedCount = pre.filter(d => postIds.has(d.participant_id)).length;
 
-  function avgScores(results: typeof data): DiagnosisScores | null {
+  type Row = NonNullable<typeof data>[number];
+  function avgScores(results: Row[]): DiagnosisScores | null {
     if (results.length === 0) return null;
     const sum = { aiUnderstanding: 0, toolUsage: 0, problemSolving: 0, collaboration: 0, ethics: 0 };
     results.forEach(r => {

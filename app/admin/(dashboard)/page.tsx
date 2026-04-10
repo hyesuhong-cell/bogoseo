@@ -5,6 +5,7 @@ import { auth } from '@/auth';
 import { listHackathons } from '@/lib/hackathonStore';
 import { countParticipantsByHackathons } from '@/lib/userStore';
 import { getHackathonDiagnosisStats } from '@/lib/diagnosisStore';
+import type { DiagnosisScores } from '@/lib/diagnosisStore';
 import type { HackathonCategory } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -82,8 +83,8 @@ export default async function AdminDashboard() {
   ];
 
   const growthItems = MOCK_GROWTH.map(item => {
-    const k = item.key as keyof typeof diagStats.preAvg;
-    const hasDbData = diagStats.preAvg && diagStats.postAvg;
+    const k = item.key as keyof DiagnosisScores;
+    const hasDbData = diagStats.preAvg !== null && diagStats.postAvg !== null;
     const pre = hasDbData ? (diagStats.preAvg![k] ?? item.pre) : item.pre;
     const post = hasDbData ? (diagStats.postAvg![k] ?? item.post) : item.post;
     return { label: item.label, pre, post };
