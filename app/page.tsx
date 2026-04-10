@@ -80,6 +80,13 @@ export default function Home() {
           </Link>
         </div>
 
+        {/* 슈퍼어드민 입장 */}
+        <div className="text-center mb-6">
+          <Link href="/superadmin/login" className="text-white/30 hover:text-white/60 text-xs transition-colors">
+            UD임팩트 내부 관리자 →
+          </Link>
+        </div>
+
         {/* 핵심 지표 배너 */}
         <div className="grid grid-cols-4 gap-4">
           {[

@@ -46,12 +46,12 @@ export default function SuperAdminDashboard() {
           </Link>
 
           {/* 해커톤 전체 현황 */}
-          <Link href="/admin" className="group bg-white/10 hover:bg-white/15 border border-white/20 rounded-2xl p-7 transition-all">
+          <Link href="/admin/hackathons" className="group bg-white/10 hover:bg-white/15 border border-white/20 rounded-2xl p-7 transition-all">
             <div className="text-3xl mb-4">🏆</div>
             <h2 className="text-white font-bold text-lg mb-2">해커톤 현황</h2>
             <p className="text-purple-300 text-sm">전체 해커톤 및 참가자 현황을 확인합니다.</p>
             <div className="mt-5 text-purple-400 group-hover:text-purple-200 text-sm font-medium transition-colors">
-              바로가기 →
+              관리자 포털에서 보기 →
             </div>
           </Link>
 
@@ -62,7 +62,7 @@ export default function SuperAdminDashboard() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { label: '환경', value: process.env.NODE_ENV === 'production' ? '운영' : '개발', color: 'text-emerald-400' },
-                { label: 'DB', value: 'In-Memory (MVP)', color: 'text-amber-400' },
+                { label: 'DB', value: 'Supabase', color: 'text-emerald-400' },
                 { label: '인증', value: 'NextAuth v5', color: 'text-blue-400' },
                 { label: '배포', value: 'Vercel', color: 'text-purple-400' },
               ].map(item => (
