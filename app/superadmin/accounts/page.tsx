@@ -47,6 +47,11 @@ export default function AdminAccountsPage() {
   async function fetchAdmins() {
     setLoading(true);
     const res = await fetch('/api/admin/accounts');
+    if (res.status === 403 || res.status === 401) {
+      // 세션 만료 또는 권한 없음 → 슈퍼어드민 로그인으로
+      window.location.href = '/superadmin/login';
+      return;
+    }
     if (res.ok) {
       const data = await res.json();
       setAdmins(data.admins);

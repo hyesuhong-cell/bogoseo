@@ -57,9 +57,13 @@ export default function HackathonManageActions({ hackathon }: Props) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(editForm),
     });
-    const data = await res.json();
     setEditLoading(false);
 
+    if (res.status === 403 || res.status === 401) {
+      window.location.href = '/superadmin/login';
+      return;
+    }
+    const data = await res.json();
     if (!res.ok) {
       setEditError(data.error || '수정에 실패했습니다.');
     } else {
