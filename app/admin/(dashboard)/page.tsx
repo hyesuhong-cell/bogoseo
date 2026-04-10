@@ -1,20 +1,33 @@
 import Link from 'next/link';
 import { mockHackathons, mockParticipants, mockTeams, mockSurveys } from '@/lib/mockData';
 import HackathonListWithTabs from '@/components/HackathonListWithTabs';
+import { auth } from '@/auth';
 
-export default function AdminDashboard() {
-  const completed = mockHackathons.filter(h => h.status === 'completed');
-  const upcoming = mockHackathons.filter(h => h.status === 'upcoming');
-  const totalParticipants = mockParticipants.length;
-  const diagnosed = mockParticipants.filter(p => p.preScore && p.postScore).length;
-  const avgNps = mockSurveys.length > 0
-    ? Math.round((mockSurveys.reduce((s, v) => s + v.nps, 0) / mockSurveys.length) * 10)
+export default async function AdminDashboard() {
+  const session = await auth();
+  const role = (session?.user as { role?: string })?.role;
+  const university = (session?.user as { university?: string })?.university;
+
+  // 슈퍼어드민은 전체, 어드민은 담당 대학만
+  const hackathons = role === 'superadmin'
+    ? mockHackathons
+    : mockHackathons.filter(h => h.university === university);
+
+  const hackathonIds = new Set(hackathons.map(h => h.id));
+  const participants = mockParticipants.filter(p => hackathonIds.has(p.hackathonId));
+  const surveys = mockSurveys.filter(s => hackathonIds.has(s.hackathonId));
+
+  const completed = hackathons.filter(h => h.status === 'completed');
+  const totalParticipants = participants.length;
+  const diagnosed = participants.filter(p => p.preScore && p.postScore).length;
+  const avgNps = surveys.length > 0
+    ? Math.round((surveys.reduce((s, v) => s + v.nps, 0) / surveys.length) * 10)
     : 0;
 
   const kpiCards = [
-    { label: '총 해커톤', value: mockHackathons.length, sub: `완료 ${completed.length}건`, color: 'bg-blue-600', icon: '🏆' },
+    { label: '총 해커톤', value: hackathons.length, sub: `완료 ${completed.length}건`, color: 'bg-blue-600', icon: '🏆' },
     { label: '총 참가자', value: totalParticipants + '명', sub: '역대 누적', color: 'bg-emerald-600', icon: '👥' },
-    { label: '역량 진단 완료', value: diagnosed + '명', sub: `완료율 ${Math.round(diagnosed/totalParticipants*100)}%`, color: 'bg-violet-600', icon: '📊' },
+    { label: '역량 진단 완료', value: diagnosed + '명', sub: totalParticipants > 0 ? `완료율 ${Math.round(diagnosed / totalParticipants * 100)}%` : '-', color: 'bg-violet-600', icon: '📊' },
     { label: '평균 NPS', value: avgNps + '점', sub: '참가자 만족도', color: 'bg-orange-500', icon: '⭐' },
   ];
 
@@ -22,7 +35,11 @@ export default function AdminDashboard() {
     <div className="p-8 fade-in">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900">대시보드</h1>
-        <p className="text-slate-500 mt-1">해커톤 성과 추적 현황을 확인하세요</p>
+        <p className="text-slate-500 mt-1">
+          {role === 'superadmin'
+            ? '전체 해커톤 성과 현황'
+            : `${university ?? ''} 해커톤 성과 현황`}
+        </p>
       </div>
 
       {/* KPI 카드 */}
@@ -43,7 +60,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-2 gap-6">
         {/* 해커톤 목록 (카테고리 탭 포함) */}
         <HackathonListWithTabs
-          hackathons={mockHackathons.map(h => ({
+          hackathons={hackathons.map(h => ({
             id: h.id,
             name: h.name,
             university: h.university,

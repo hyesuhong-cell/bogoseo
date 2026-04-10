@@ -72,7 +72,9 @@ export default function AdminSidebar() {
             </div>
             <div className="min-w-0">
               <div className="text-white text-xs font-medium truncate">{session.user.name}</div>
-              <div className="text-slate-500 text-[10px] truncate">{session.user.email}</div>
+              <div className="text-slate-500 text-[10px] truncate">
+                {(session.user as { university?: string }).university ?? session.user.email}
+              </div>
             </div>
           </div>
         )}

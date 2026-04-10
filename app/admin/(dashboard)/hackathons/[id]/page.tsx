@@ -1,12 +1,19 @@
 import Link from 'next/link';
 import { mockHackathons, mockParticipants, mockTeams, mockSurveys } from '@/lib/mockData';
-import { notFound } from 'next/navigation';
+import { notFound, forbidden } from 'next/navigation';
 import InviteLinkButton from '@/components/InviteLinkButton';
+import { auth } from '@/auth';
 
 export default async function HackathonDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const hackathon = mockHackathons.find(h => h.id === id);
   if (!hackathon) notFound();
+
+  // 어드민은 자기 대학 해커톤만 접근 가능
+  const session = await auth();
+  const role = (session?.user as { role?: string })?.role;
+  const university = (session?.user as { university?: string })?.university;
+  if (role === 'admin' && hackathon.university !== university) forbidden();
 
   const participants = mockParticipants.filter(p => p.hackathonId === id);
   const teams = mockTeams.filter(t => t.hackathonId === id);
