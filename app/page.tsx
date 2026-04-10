@@ -22,7 +22,7 @@ export default function Home() {
         {/* 역할 선택 카드 */}
         <div className="grid md:grid-cols-2 gap-6 mb-10">
           {/* 관리자 */}
-          <Link href="/admin" className="group">
+          <Link href="/admin/login" className="group">
             <div className="bg-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 group-hover:-translate-y-1 cursor-pointer border-2 border-transparent hover:border-blue-200">
               <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-blue-600 transition-colors">
                 <svg className="w-7 h-7 text-blue-600 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
