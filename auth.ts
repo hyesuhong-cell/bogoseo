@@ -51,7 +51,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!credentials?.email || !credentials?.password) return null;
 
         // 1. superadmin이 생성한 어드민 계정 확인 (우선)
-        const adminAccount = findAdminByEmail(credentials.email as string);
+        const adminAccount = await findAdminByEmail(credentials.email as string);
         if (adminAccount) {
           const isValid = await bcrypt.compare(
             credentials.password as string,
@@ -102,7 +102,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const pwd = credentials.password as string;
 
         // 1. 초대 링크로 가입한 사용자 확인 (우선)
-        const registered = findUserByStudentId(sid);
+        const registered = await findUserByStudentId(sid);
         if (registered) {
           const isValid = await bcrypt.compare(pwd, registered.passwordHash);
           if (!isValid) return null;

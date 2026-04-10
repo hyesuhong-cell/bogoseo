@@ -15,7 +15,7 @@ export async function GET() {
     return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 });
   }
 
-  const admins = listAdmins().map(a => ({
+  const admins = (await listAdmins()).map(a => ({
     id: a.id,
     name: a.name,
     email: a.email,
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '비밀번호는 8자 이상이어야 합니다.' }, { status: 400 });
   }
 
-  if (isAdminEmailTaken(email)) {
+  if (await isAdminEmailTaken(email)) {
     return NextResponse.json({ error: '이미 사용 중인 이메일입니다.' }, { status: 409 });
   }
 
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     createdBy: session.user?.email ?? 'superadmin',
   };
 
-  saveAdmin(admin);
+  await saveAdmin(admin);
 
   return NextResponse.json({
     success: true,

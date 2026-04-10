@@ -1,32 +1,68 @@
-/**
- * 관리자(어드민) 계정 스토어 (MVP 인메모리)
- * 실제 운영 시 Supabase admins 테이블로 교체
- */
+import { supabase } from './db/supabase';
 
 export interface AdminAccount {
   id: string;
   name: string;
   email: string;
-  university: string;   // 담당 대학
+  university: string;
   passwordHash: string;
   createdAt: string;
-  createdBy: string;    // 'superadmin' 또는 슈퍼어드민 email
+  createdBy: string;
 }
 
-const store = new Map<string, AdminAccount>();
-
-export function saveAdmin(admin: AdminAccount) {
-  store.set(admin.email, admin);
+export async function saveAdmin(admin: AdminAccount) {
+  await supabase.from('admin_accounts').upsert({
+    id: admin.id,
+    name: admin.name,
+    email: admin.email,
+    university: admin.university,
+    password_hash: admin.passwordHash,
+    created_at: admin.createdAt,
+    created_by: admin.createdBy,
+  });
 }
 
-export function findAdminByEmail(email: string): AdminAccount | undefined {
-  return store.get(email);
+export async function findAdminByEmail(email: string): Promise<AdminAccount | undefined> {
+  const { data } = await supabase
+    .from('admin_accounts')
+    .select('*')
+    .eq('email', email)
+    .single();
+
+  if (!data) return undefined;
+  return {
+    id: data.id,
+    name: data.name,
+    email: data.email,
+    university: data.university,
+    passwordHash: data.password_hash,
+    createdAt: data.created_at,
+    createdBy: data.created_by,
+  };
 }
 
-export function listAdmins(): AdminAccount[] {
-  return Array.from(store.values());
+export async function listAdmins(): Promise<AdminAccount[]> {
+  const { data } = await supabase
+    .from('admin_accounts')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  return (data ?? []).map(d => ({
+    id: d.id,
+    name: d.name,
+    email: d.email,
+    university: d.university,
+    passwordHash: d.password_hash,
+    createdAt: d.created_at,
+    createdBy: d.created_by,
+  }));
 }
 
-export function isAdminEmailTaken(email: string): boolean {
-  return store.has(email);
+export async function isAdminEmailTaken(email: string): Promise<boolean> {
+  const { count } = await supabase
+    .from('admin_accounts')
+    .select('id', { count: 'exact', head: true })
+    .eq('email', email);
+
+  return (count ?? 0) > 0;
 }

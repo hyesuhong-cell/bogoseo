@@ -1,7 +1,4 @@
-/**
- * 인메모리 사용자 스토어 (MVP용)
- * 프로세스 재시작 시 초기화됨 — 실제 운영 시 DB로 교체 필요
- */
+import { supabase } from './db/supabase';
 
 export interface RegisteredUser {
   id: string;
@@ -15,17 +12,46 @@ export interface RegisteredUser {
   registeredAt: string;
 }
 
-// 싱글톤 Map — 서버 프로세스 내에서 유지됨
-const store = new Map<string, RegisteredUser>();
-
-export function saveUser(user: RegisteredUser) {
-  store.set(user.studentId, user);
+export async function saveUser(user: RegisteredUser) {
+  await supabase.from('registered_participants').upsert({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    student_id: user.studentId,
+    hackathon_id: user.hackathonId,
+    password_hash: user.passwordHash,
+    department: user.major,
+    grade: user.grade,
+    created_at: user.registeredAt,
+  });
 }
 
-export function findUserByStudentId(studentId: string): RegisteredUser | undefined {
-  return store.get(studentId);
+export async function findUserByStudentId(studentId: string): Promise<RegisteredUser | undefined> {
+  const { data } = await supabase
+    .from('registered_participants')
+    .select('*')
+    .eq('student_id', studentId)
+    .single();
+
+  if (!data) return undefined;
+  return {
+    id: data.id,
+    name: data.name,
+    email: data.email ?? '',
+    studentId: data.student_id,
+    hackathonId: data.hackathon_id,
+    major: data.department ?? '',
+    grade: data.grade ?? 1,
+    passwordHash: data.password_hash,
+    registeredAt: data.created_at,
+  };
 }
 
-export function isStudentIdTaken(studentId: string): boolean {
-  return store.has(studentId);
+export async function isStudentIdTaken(studentId: string): Promise<boolean> {
+  const { count } = await supabase
+    .from('registered_participants')
+    .select('id', { count: 'exact', head: true })
+    .eq('student_id', studentId);
+
+  return (count ?? 0) > 0;
 }
