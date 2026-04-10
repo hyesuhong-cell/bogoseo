@@ -42,6 +42,12 @@ export default function AdminAccountsPage() {
   const [deleteTarget, setDeleteTarget] = useState<AdminAccount | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // 로그인 테스트
+  const [testTarget, setTestTarget] = useState<AdminAccount | null>(null);
+  const [testPassword, setTestPassword] = useState('');
+  const [testResult, setTestResult] = useState<{ success: boolean; hint: string; step?: string } | null>(null);
+  const [testLoading, setTestLoading] = useState(false);
+
   useEffect(() => { fetchAdmins(); }, []);
 
   async function fetchAdmins() {
@@ -125,6 +131,21 @@ export default function AdminAccountsPage() {
     showSuccess(`${deleteTarget.name} 계정이 삭제되었습니다.`);
     setDeleteTarget(null);
     fetchAdmins();
+  }
+
+  async function handleTestLogin(e: React.FormEvent) {
+    e.preventDefault();
+    if (!testTarget) return;
+    setTestLoading(true);
+    setTestResult(null);
+    const res = await fetch('/api/admin/debug', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: testTarget.email, password: testPassword }),
+    });
+    const data = await res.json();
+    setTestResult(data);
+    setTestLoading(false);
   }
 
   return (
@@ -278,6 +299,12 @@ export default function AdminAccountsPage() {
                     </span>
                     <div className="flex items-center gap-2">
                       <button
+                        onClick={() => { setTestTarget(admin); setTestPassword(''); setTestResult(null); }}
+                        className="px-3 py-1.5 text-xs font-medium text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/20 rounded-lg transition-colors"
+                      >
+                        테스트
+                      </button>
+                      <button
                         onClick={() => openEdit(admin)}
                         className="px-3 py-1.5 text-xs font-medium text-purple-300 border border-purple-500/40 hover:bg-purple-500/20 rounded-lg transition-colors"
                       >
@@ -357,6 +384,57 @@ export default function AdminAccountsPage() {
                   className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 disabled:bg-purple-800 text-white font-semibold rounded-xl text-sm transition-colors"
                 >
                   {editLoading ? '저장 중...' : '저장'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 로그인 테스트 모달 */}
+      {testTarget && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
+          <div className="bg-slate-800 border border-white/20 rounded-2xl p-8 w-full max-w-md">
+            <h2 className="text-white font-bold text-lg mb-1">로그인 테스트</h2>
+            <p className="text-purple-300 text-xs mb-6">{testTarget.email} 계정의 비밀번호를 확인합니다.</p>
+            <form onSubmit={handleTestLogin} className="space-y-4">
+              <div>
+                <label className="block text-purple-200 text-sm font-medium mb-2">테스트할 비밀번호</label>
+                <input
+                  type="text"
+                  value={testPassword}
+                  onChange={e => setTestPassword(e.target.value)}
+                  placeholder="확인할 비밀번호 입력"
+                  required
+                  autoComplete="off"
+                  className="w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              {testResult && (
+                <div className={`rounded-xl px-4 py-3 text-sm border ${
+                  testResult.success
+                    ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300'
+                    : 'bg-red-500/20 border-red-500/30 text-red-300'
+                }`}>
+                  <div className="font-semibold mb-1">{testResult.success ? '✓ 인증 성공' : '✗ 인증 실패'}</div>
+                  <div className="text-xs opacity-80">{testResult.hint}</div>
+                  {testResult.step && <div className="text-xs opacity-60 mt-0.5">단계: {testResult.step}</div>}
+                </div>
+              )}
+              <div className="flex gap-3 justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => { setTestTarget(null); setTestResult(null); }}
+                  className="px-5 py-2.5 text-white/60 hover:text-white text-sm transition-colors"
+                >
+                  닫기
+                </button>
+                <button
+                  type="submit"
+                  disabled={testLoading}
+                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-900 text-white font-semibold rounded-xl text-sm transition-colors"
+                >
+                  {testLoading ? '확인 중...' : '인증 확인'}
                 </button>
               </div>
             </form>

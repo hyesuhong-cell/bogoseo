@@ -55,18 +55,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const password = (credentials.password as string).trim();
 
         // 1. superadmin이 생성한 어드민 계정 확인 (우선)
-        const adminAccount = await findAdminByEmail(email);
-        if (adminAccount) {
-          if (!adminAccount.passwordHash) return null;
-          const isValid = await bcrypt.compare(password, adminAccount.passwordHash);
-          if (!isValid) return null;
-          return {
-            id: adminAccount.id,
-            name: adminAccount.name,
-            email: adminAccount.email,
-            role: 'admin',
-            university: adminAccount.university,
-          };
+        try {
+          const adminAccount = await findAdminByEmail(email);
+          if (adminAccount) {
+            if (!adminAccount.passwordHash) {
+              console.error('[admin auth] passwordHash is null for:', email);
+              return null;
+            }
+            const isValid = await bcrypt.compare(password, adminAccount.passwordHash);
+            if (!isValid) {
+              console.error('[admin auth] bcrypt mismatch for:', email);
+              return null;
+            }
+            return {
+              id: adminAccount.id,
+              name: adminAccount.name,
+              email: adminAccount.email,
+              role: 'admin',
+              university: adminAccount.university,
+            };
+          }
+        } catch (err) {
+          console.error('[admin auth] DB lookup failed:', err);
+          // DB 오류 시 env var fallback으로 진행
         }
 
         // 2. 환경변수 기본 관리자 계정 (fallback)
@@ -77,7 +88,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (email !== adminEmail.trim().toLowerCase()) return null;
 
         const isValid = await bcrypt.compare(password, adminPasswordHash);
-        if (!isValid) return null;
+        if (!isValid) {
+          console.error('[admin auth] env var bcrypt mismatch for:', email);
+          return null;
+        }
 
         return {
           id: 'admin-001',

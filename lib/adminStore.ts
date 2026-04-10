@@ -24,11 +24,18 @@ export async function saveAdmin(admin: AdminAccount) {
 }
 
 export async function findAdminByEmail(email: string): Promise<AdminAccount | undefined> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('admin_accounts')
     .select('*')
     .eq('email', email.trim().toLowerCase())
     .single();
+
+  if (error) {
+    // PGRST116 = 행 없음 (정상)
+    if (error.code === 'PGRST116') return undefined;
+    // 그 외 DB 오류는 상위로 throw
+    throw new Error(`[adminStore.findAdminByEmail] ${error.message} (code: ${error.code})`);
+  }
 
   if (!data) return undefined;
   return {
