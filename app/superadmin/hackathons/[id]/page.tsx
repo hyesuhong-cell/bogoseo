@@ -101,8 +101,14 @@ export default async function SuperAdminHackathonDetailPage({ params }: { params
                 {hackathon.venue && <span>📍 {hackathon.venue}</span>}
               </div>
             </div>
-            {/* 수정/삭제 액션 */}
-            <div className="ml-4 mt-1">
+            {/* 액션 버튼 */}
+            <div className="ml-4 mt-1 flex flex-col gap-2 items-end">
+              <Link
+                href={`/admin/hackathons/${hackathon.id}`}
+                className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white text-sm font-semibold rounded-xl transition-colors whitespace-nowrap"
+              >
+                어드민 뷰로 자세히 보기 →
+              </Link>
               <HackathonManageActions hackathon={hackathon} redirectAfterDelete="/superadmin/hackathons" />
             </div>
           </div>

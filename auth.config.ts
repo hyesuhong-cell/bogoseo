@@ -42,12 +42,15 @@ export const authConfig = {
         return true;
       }
 
-      // 관리자 전용 페이지 (어드민 role만 접근, 슈퍼어드민은 자체 포탈 사용)
+      // 관리자 전용 페이지 (어드민 role만 접근, 슈퍼어드민은 해커톤 상세만 열람 허용)
       if (path.startsWith('/admin')) {
         if (!isLoggedIn) {
           return Response.redirect(new URL('/admin/login', nextUrl));
         }
         if (role === 'superadmin') {
+          // 슈퍼어드민은 해커톤 상세 sub-page(/admin/hackathons/[id]/...)만 열람 허용
+          const isHackathonDetail = /^\/admin\/hackathons\/(?!new($|\/))/.test(path);
+          if (isHackathonDetail) return true;
           return Response.redirect(new URL('/superadmin', nextUrl));
         }
         if (role !== 'admin') {

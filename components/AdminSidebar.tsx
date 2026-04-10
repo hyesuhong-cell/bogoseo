@@ -27,6 +27,59 @@ const navItems = [
 export default function AdminSidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const isSuperAdmin = (session?.user as { role?: string })?.role === 'superadmin';
+
+  // 슈퍼어드민이 어드민 해커톤 상세 열람 중일 때 → 슬림 배너 표시
+  if (isSuperAdmin) {
+    // hackathon id 추출 (/admin/hackathons/[id]/...)
+    const match = pathname.match(/^\/admin\/hackathons\/([^/]+)/);
+    const hackathonId = match?.[1];
+    return (
+      <aside className="w-60 bg-purple-950 min-h-screen flex flex-col border-r border-purple-800">
+        <div className="p-5 border-b border-purple-800">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">UD</div>
+            <div>
+              <div className="text-white font-bold text-sm leading-tight">슈퍼어드민</div>
+              <div className="text-purple-400 text-xs">열람 모드</div>
+            </div>
+          </div>
+        </div>
+        <nav className="flex-1 p-4 space-y-1">
+          {hackathonId && (
+            <>
+              <Link href={`/admin/hackathons/${hackathonId}`} className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${pathname === `/admin/hackathons/${hackathonId}` ? 'bg-purple-700 text-white' : 'text-purple-300 hover:text-white hover:bg-purple-800'}`}>
+                <span>📋</span> 개요
+              </Link>
+              <Link href={`/admin/hackathons/${hackathonId}/participants`} className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${pathname.includes('/participants') ? 'bg-purple-700 text-white' : 'text-purple-300 hover:text-white hover:bg-purple-800'}`}>
+                <span>👥</span> 참가자 관리
+              </Link>
+              <Link href={`/admin/hackathons/${hackathonId}/teams`} className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${pathname.includes('/teams') ? 'bg-purple-700 text-white' : 'text-purple-300 hover:text-white hover:bg-purple-800'}`}>
+                <span>🏅</span> 팀/프로젝트
+              </Link>
+              <Link href={`/admin/hackathons/${hackathonId}/evaluation`} className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${pathname.includes('/evaluation') ? 'bg-purple-700 text-white' : 'text-purple-300 hover:text-white hover:bg-purple-800'}`}>
+                <span>📝</span> 심사 결과
+              </Link>
+              <Link href={`/admin/hackathons/${hackathonId}/report`} className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${pathname.includes('/report') ? 'bg-purple-700 text-white' : 'text-purple-300 hover:text-white hover:bg-purple-800'}`}>
+                <span>📊</span> 성과 리포트
+              </Link>
+            </>
+          )}
+        </nav>
+        <div className="p-4 border-t border-purple-800 space-y-2">
+          <Link
+            href={hackathonId ? `/superadmin/hackathons/${hackathonId}` : '/superadmin/hackathons'}
+            className="flex items-center gap-2 text-purple-300 hover:text-white text-sm transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+            </svg>
+            슈퍼어드민 포탈로
+          </Link>
+        </div>
+      </aside>
+    );
+  }
 
   return (
     <aside className="w-60 bg-slate-900 min-h-screen flex flex-col">
