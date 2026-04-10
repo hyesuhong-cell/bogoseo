@@ -104,7 +104,7 @@ export default function NewHackathonPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">담당 대학 <span className="text-red-500">*</span></label>
-              {role === 'admin' ? (
+              {role === 'admin' && myUniversity ? (
                 <input
                   type="text"
                   value={form.university}
