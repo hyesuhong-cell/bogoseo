@@ -55,3 +55,23 @@ export async function isStudentIdTaken(studentId: string): Promise<boolean> {
 
   return (count ?? 0) > 0;
 }
+
+export async function listParticipantsByHackathon(hackathonId: string): Promise<RegisteredUser[]> {
+  const { data } = await supabase
+    .from('registered_participants')
+    .select('*')
+    .eq('hackathon_id', hackathonId)
+    .order('created_at', { ascending: true });
+
+  return (data ?? []).map(d => ({
+    id: d.id,
+    name: d.name,
+    email: d.email ?? '',
+    studentId: d.student_id,
+    hackathonId: d.hackathon_id,
+    major: d.department ?? '',
+    grade: d.grade ?? 1,
+    passwordHash: d.password_hash,
+    registeredAt: d.created_at,
+  }));
+}

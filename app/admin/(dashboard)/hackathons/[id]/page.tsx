@@ -4,6 +4,9 @@ import { notFound, forbidden } from 'next/navigation';
 import InviteLinkButton from '@/components/InviteLinkButton';
 import { auth } from '@/auth';
 import { getHackathon } from '@/lib/hackathonStore';
+import { listParticipantsByHackathon } from '@/lib/userStore';
+
+export const dynamic = 'force-dynamic';
 
 export default async function HackathonDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -34,10 +37,15 @@ export default async function HackathonDetailPage({ params }: { params: Promise<
     tracks: raw.tracks ?? [],
   };
 
-  const participants = mockParticipants.filter(p => p.hackathonId === id);
+  const mockParts = mockParticipants.filter(p => p.hackathonId === id);
+  const dbParts = await listParticipantsByHackathon(id);
+  const mockIds = new Set(mockParts.map(p => p.id));
+  const dbOnly = dbParts.filter(p => !mockIds.has(p.id));
+  const participants = [...mockParts, ...dbOnly];
+
   const teams = mockTeams.filter(t => t.hackathonId === id);
   const surveys = mockSurveys.filter(s => s.hackathonId === id);
-  const diagnosed = participants.filter(p => p.preScore && p.postScore);
+  const diagnosed = mockParts.filter(p => p.preScore && p.postScore);
 
   const avgNps = surveys.length > 0
     ? (surveys.reduce((s, v) => s + v.nps, 0) / surveys.length).toFixed(1)
