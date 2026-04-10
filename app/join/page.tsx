@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 
@@ -21,6 +21,26 @@ function Field({ label, id, error, children }: { label: string; id: string; erro
   );
 }
 
+// 한국어 IME 조합 중 state 업데이트를 막기 위한 훅
+function useKoreanInput(initial: string): [string, React.InputHTMLAttributes<HTMLInputElement>, (v: string) => void] {
+  const [value, setValue] = useState(initial);
+  const composing = useRef(false);
+
+  const attrs: React.InputHTMLAttributes<HTMLInputElement> = {
+    value,
+    onCompositionStart: () => { composing.current = true; },
+    onCompositionEnd: (e) => {
+      composing.current = false;
+      setValue(e.currentTarget.value);
+    },
+    onChange: (e) => {
+      if (!composing.current) setValue(e.target.value);
+    },
+  };
+
+  return [value, attrs, setValue];
+}
+
 function JoinForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -29,15 +49,19 @@ function JoinForm() {
   const [hackathonName, setHackathonName] = useState('');
   const [tokenError, setTokenError] = useState('');
   const [step, setStep] = useState<'form' | 'done'>('form');
-
-  const [form, setForm] = useState({
-    name: '', studentId: '', email: '',
-    major: '', grade: '1', password: '', passwordConfirm: '',
-  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
-  // 토큰 사전 검증
+  // 한국어 입력 필드
+  const [name, nameAttrs] = useKoreanInput('');
+  // 나머지 필드 (영문/숫자)
+  const [studentId, setStudentId] = useState('');
+  const [email, setEmail] = useState('');
+  const [major, setMajor] = useState('');
+  const [grade, setGrade] = useState('1');
+  const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+
   useEffect(() => {
     if (!token) { setTokenError('초대 링크가 올바르지 않습니다.'); return; }
     fetch('/api/auth/register/verify', {
@@ -53,17 +77,14 @@ function JoinForm() {
       .catch(() => setTokenError('초대 링크 확인 중 오류가 발생했습니다.'));
   }, [token]);
 
-  const set = (key: string, value: string) =>
-    setForm(f => ({ ...f, [key]: value }));
-
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!form.name.trim()) e.name = '이름을 입력해주세요';
-    if (!form.studentId.trim()) e.studentId = '학번을 입력해주세요';
-    if (!form.email.includes('@')) e.email = '올바른 이메일을 입력해주세요';
-    if (!form.major) e.major = '학과를 선택해주세요';
-    if (form.password.length < 6) e.password = '비밀번호는 6자 이상이어야 합니다';
-    if (form.password !== form.passwordConfirm) e.passwordConfirm = '비밀번호가 일치하지 않습니다';
+    if (!name.trim()) e.name = '이름을 입력해주세요';
+    if (!studentId.trim()) e.studentId = '학번을 입력해주세요';
+    if (!email.includes('@')) e.email = '올바른 이메일을 입력해주세요';
+    if (!major) e.major = '학과를 선택해주세요';
+    if (password.length < 6) e.password = '비밀번호는 6자 이상이어야 합니다';
+    if (password !== passwordConfirm) e.passwordConfirm = '비밀번호가 일치하지 않습니다';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -76,7 +97,7 @@ function JoinForm() {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, ...form, grade: Number(form.grade) }),
+      body: JSON.stringify({ token, name, studentId, email, major, grade: Number(grade), password, passwordConfirm }),
     });
     const data = await res.json();
     setLoading(false);
@@ -86,18 +107,8 @@ function JoinForm() {
       return;
     }
 
-    // 가입 후 자동 로그인
-    const result = await signIn('participant', {
-      studentId: form.studentId,
-      password: form.password,
-      redirect: false,
-    });
-
-    if (result?.ok) {
-      setStep('done');
-    } else {
-      setStep('done'); // 로그인 실패해도 가입은 성공
-    }
+    await signIn('participant', { studentId, password, redirect: false });
+    setStep('done');
   };
 
   if (tokenError) {
@@ -136,45 +147,41 @@ function JoinForm() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 flex items-center justify-center p-4 py-10">
       <div className="w-full max-w-md">
-        {/* 헤더 */}
         <div className="text-center mb-6">
           <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-bold mx-auto mb-3 shadow-lg shadow-blue-200">
             UD
           </div>
           <h1 className="text-lg font-bold text-slate-800">해커톤 참가자 등록</h1>
-          {hackathonName && (
-            <p className="text-sm text-blue-600 font-medium mt-1">{hackathonName}</p>
-          )}
+          {hackathonName && <p className="text-sm text-blue-600 font-medium mt-1">{hackathonName}</p>}
         </div>
 
         <div className="bg-white rounded-2xl p-7 shadow-xl border border-slate-100">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <Field label="이름" id="name" error={errors.name}>
-                <input id="name" value={form.name} onChange={e => set('name', e.target.value)}
-                  placeholder="홍길동" className={inputClass(errors.name)} />
+                <input id="name" {...nameAttrs} placeholder="홍길동" className={inputClass(errors.name)} />
               </Field>
               <Field label="학번" id="studentId" error={errors.studentId}>
-                <input id="studentId" value={form.studentId} onChange={e => set('studentId', e.target.value)}
+                <input id="studentId" value={studentId} onChange={e => setStudentId(e.target.value)}
                   placeholder="2021001001" className={inputClass(errors.studentId)} />
               </Field>
             </div>
 
             <Field label="이메일" id="email" error={errors.email}>
-              <input id="email" type="email" value={form.email} onChange={e => set('email', e.target.value)}
+              <input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)}
                 placeholder="student@university.ac.kr" className={inputClass(errors.email)} />
             </Field>
 
             <div className="grid grid-cols-2 gap-4">
               <Field label="학과" id="major" error={errors.major}>
-                <select id="major" value={form.major} onChange={e => set('major', e.target.value)}
+                <select id="major" value={major} onChange={e => setMajor(e.target.value)}
                   className={inputClass(errors.major)}>
                   <option value="">선택</option>
                   {MAJORS.map(m => <option key={m} value={m}>{m}</option>)}
                 </select>
               </Field>
               <Field label="학년" id="grade" error={errors.grade}>
-                <select id="grade" value={form.grade} onChange={e => set('grade', e.target.value)}
+                <select id="grade" value={grade} onChange={e => setGrade(e.target.value)}
                   className={inputClass(errors.grade)}>
                   {[1,2,3,4].map(g => <option key={g} value={g}>{g}학년</option>)}
                 </select>
@@ -182,12 +189,12 @@ function JoinForm() {
             </div>
 
             <Field label="비밀번호" id="password" error={errors.password}>
-              <input id="password" type="password" value={form.password} onChange={e => set('password', e.target.value)}
+              <input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)}
                 placeholder="6자 이상" className={inputClass(errors.password)} />
             </Field>
 
             <Field label="비밀번호 확인" id="passwordConfirm" error={errors.passwordConfirm}>
-              <input id="passwordConfirm" type="password" value={form.passwordConfirm} onChange={e => set('passwordConfirm', e.target.value)}
+              <input id="passwordConfirm" type="password" value={passwordConfirm} onChange={e => setPasswordConfirm(e.target.value)}
                 placeholder="비밀번호 재입력" className={inputClass(errors.passwordConfirm)} />
             </Field>
 
