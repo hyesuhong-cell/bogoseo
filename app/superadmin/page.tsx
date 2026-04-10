@@ -46,12 +46,12 @@ export default function SuperAdminDashboard() {
           </Link>
 
           {/* 해커톤 전체 현황 */}
-          <Link href="/admin/hackathons" className="group bg-white/10 hover:bg-white/15 border border-white/20 rounded-2xl p-7 transition-all">
+          <Link href="/superadmin/hackathons" className="group bg-white/10 hover:bg-white/15 border border-white/20 rounded-2xl p-7 transition-all">
             <div className="text-3xl mb-4">🏆</div>
             <h2 className="text-white font-bold text-lg mb-2">해커톤 현황</h2>
             <p className="text-purple-300 text-sm">전체 해커톤 및 참가자 현황을 확인합니다.</p>
             <div className="mt-5 text-purple-400 group-hover:text-purple-200 text-sm font-medium transition-colors">
-              관리자 포털에서 보기 →
+              관리하기 →
             </div>
           </Link>
 
