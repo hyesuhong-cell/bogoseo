@@ -113,6 +113,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             role: 'participant',
             studentId: registered.studentId,
             participantId: registered.id,
+            hackathonId: registered.hackathonId,
           };
         }
 

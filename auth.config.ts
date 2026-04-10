@@ -66,6 +66,7 @@ export const authConfig = {
         token.studentId = (user as { studentId?: string }).studentId;
         token.participantId = (user as { participantId?: string }).participantId;
         token.university = (user as { university?: string }).university;
+        token.hackathonId = (user as { hackathonId?: string }).hackathonId;
       }
       return token;
     },
@@ -75,6 +76,7 @@ export const authConfig = {
         (session.user as { studentId?: string }).studentId = token.studentId as string;
         (session.user as { participantId?: string }).participantId = token.participantId as string;
         (session.user as { university?: string }).university = token.university as string;
+        (session.user as { hackathonId?: string }).hackathonId = token.hackathonId as string;
       }
       return session;
     },

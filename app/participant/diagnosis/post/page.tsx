@@ -1,5 +1,6 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { diagnosisQuestions } from '@/lib/mockData';
 import Link from 'next/link';
 
@@ -11,8 +12,25 @@ const categoryLabels: Record<string, string> = {
   ethics: '윤리적 판단력',
 };
 
-// 사전 점수 (실제로는 DB에서 불러옴)
-const PRE_SCORES: Record<string, number> = {
+// diagnosisQuestions category key → DiagnosisScores key
+const categoryToScoreKey: Record<string, string> = {
+  understanding: 'aiUnderstanding',
+  toolUsage: 'toolUsage',
+  problemSolving: 'problemSolving',
+  collaboration: 'collaboration',
+  ethics: 'ethics',
+};
+
+// DiagnosisScores key → diagnosisQuestions category key (역방향)
+const scoreKeyToCategory: Record<string, string> = {
+  aiUnderstanding: 'understanding',
+  toolUsage: 'toolUsage',
+  problemSolving: 'problemSolving',
+  collaboration: 'collaboration',
+  ethics: 'ethics',
+};
+
+const FALLBACK_PRE_SCORES: Record<string, number> = {
   understanding: 3,
   toolUsage: 2,
   problemSolving: 3,
@@ -21,9 +39,12 @@ const PRE_SCORES: Record<string, number> = {
 };
 
 export default function PostDiagnosisPage() {
+  const { data: session } = useSession();
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState(false);
   const [currentCategory, setCurrentCategory] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [preScores, setPreScores] = useState<Record<string, number>>(FALLBACK_PRE_SCORES);
 
   const categories = [...new Set(diagnosisQuestions.map(q => q.category))];
   const currentCat = categories[currentCategory];
@@ -33,12 +54,55 @@ export default function PostDiagnosisPage() {
   const isCurrentCategoryComplete = currentQuestions.every(q => answers[q.id] !== undefined);
   const isAllComplete = diagnosisQuestions.every(q => answers[q.id] !== undefined);
 
+  // 사전 진단 점수 불러오기
+  useEffect(() => {
+    const user = session?.user as { hackathonId?: string } | undefined;
+    if (!user?.hackathonId) return;
+
+    fetch(`/api/diagnosis?hackathonId=${user.hackathonId}&type=pre`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.result?.scores) {
+          const mapped: Record<string, number> = {};
+          Object.entries(data.result.scores as Record<string, number>).forEach(([key, val]) => {
+            const cat = scoreKeyToCategory[key] || key;
+            mapped[cat] = val;
+          });
+          setPreScores(mapped);
+        }
+      })
+      .catch(() => {});
+  }, [session]);
+
   const handleAnswer = (questionId: string, score: number) => {
     setAnswers(prev => ({ ...prev, [questionId]: score }));
   };
 
-  const handleSubmit = () => {
-    if (isAllComplete) setSubmitted(true);
+  const handleSubmit = async () => {
+    if (!isAllComplete) return;
+
+    const scores: Record<string, number> = {};
+    categories.forEach(cat => {
+      const catQ = diagnosisQuestions.filter(q => q.category === cat);
+      scores[categoryToScoreKey[cat] || cat] = +(catQ.reduce((s, q) => s + (answers[q.id] || 0), 0) / catQ.length).toFixed(1);
+    });
+
+    const user = session?.user as { participantId?: string; hackathonId?: string } | undefined;
+    if (user?.participantId && user?.hackathonId) {
+      setSaving(true);
+      try {
+        await fetch('/api/diagnosis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hackathonId: user.hackathonId, type: 'post', scores }),
+        });
+      } catch {
+        // 저장 실패해도 UI는 계속 진행
+      }
+      setSaving(false);
+    }
+
+    setSubmitted(true);
   };
 
   if (submitted) {
@@ -48,7 +112,7 @@ export default function PostDiagnosisPage() {
       postScores[cat] = +(catQ.reduce((s, q) => s + (answers[q.id] || 0), 0) / catQ.length).toFixed(1);
     });
 
-    const preAvg = +(Object.values(PRE_SCORES).reduce((a, b) => a + b, 0) / categories.length).toFixed(2);
+    const preAvg = +(Object.values(preScores).reduce((a, b) => a + b, 0) / categories.length).toFixed(2);
     const postAvg = +(Object.values(postScores).reduce((a, b) => a + b, 0) / categories.length).toFixed(2);
     const growthPct = preAvg > 0 ? Math.round(((postAvg - preAvg) / preAvg) * 100) : 0;
 
@@ -72,7 +136,7 @@ export default function PostDiagnosisPage() {
           </div>
           <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-200 text-center">
             <div className="text-xs text-emerald-600 mb-1">성장률</div>
-            <div className="text-2xl font-bold text-emerald-700">+{growthPct}%</div>
+            <div className="text-2xl font-bold text-emerald-700">{growthPct >= 0 ? '+' : ''}{growthPct}%</div>
           </div>
         </div>
 
@@ -81,7 +145,7 @@ export default function PostDiagnosisPage() {
           <h2 className="font-bold text-slate-800 mb-4">영역별 사전/사후 비교</h2>
           <div className="space-y-4">
             {categories.map(cat => {
-              const pre = PRE_SCORES[cat] || 0;
+              const pre = preScores[cat] || 0;
               const post = postScores[cat] || 0;
               const growth = +(post - pre).toFixed(1);
               return (
@@ -173,7 +237,7 @@ export default function PostDiagnosisPage() {
       {/* 사전 점수 참고 */}
       <div className="bg-slate-50 rounded-xl px-4 py-3 mb-5 flex items-center gap-3">
         <div className="text-sm text-slate-500">사전 진단 점수:</div>
-        <div className="font-bold text-slate-700">{PRE_SCORES[currentCat]} / 5.0</div>
+        <div className="font-bold text-slate-700">{preScores[currentCat] ?? '-'} / 5.0</div>
         <div className="text-xs text-slate-400">({categoryLabels[currentCat]})</div>
       </div>
 
@@ -234,12 +298,12 @@ export default function PostDiagnosisPage() {
         ) : (
           <button
             onClick={handleSubmit}
-            disabled={!isAllComplete}
+            disabled={!isAllComplete || saving}
             className={`flex-1 py-3 rounded-xl font-semibold transition-colors ${
-              isAllComplete ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+              isAllComplete && !saving ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
             }`}
           >
-            {isAllComplete ? '진단 제출하기 ✓' : `${diagnosisQuestions.length - totalAnswered}문항 남음`}
+            {saving ? '저장 중...' : isAllComplete ? '진단 제출하기 ✓' : `${diagnosisQuestions.length - totalAnswered}문항 남음`}
           </button>
         )}
       </div>

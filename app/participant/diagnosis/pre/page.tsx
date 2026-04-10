@@ -1,15 +1,8 @@
 'use client';
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { diagnosisQuestions } from '@/lib/mockData';
 import Link from 'next/link';
-
-const categoryColors: Record<string, string> = {
-  understanding: 'blue',
-  toolUsage: 'violet',
-  problemSolving: 'emerald',
-  collaboration: 'orange',
-  ethics: 'pink',
-};
 
 const categoryLabels: Record<string, string> = {
   understanding: 'AI 이해도',
@@ -19,10 +12,21 @@ const categoryLabels: Record<string, string> = {
   ethics: '윤리적 판단력',
 };
 
+// diagnosisQuestions category key → DiagnosisScores key
+const categoryToScoreKey: Record<string, string> = {
+  understanding: 'aiUnderstanding',
+  toolUsage: 'toolUsage',
+  problemSolving: 'problemSolving',
+  collaboration: 'collaboration',
+  ethics: 'ethics',
+};
+
 export default function PreDiagnosisPage() {
+  const { data: session } = useSession();
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState(false);
   const [currentCategory, setCurrentCategory] = useState(0);
+  const [saving, setSaving] = useState(false);
 
   const categories = [...new Set(diagnosisQuestions.map(q => q.category))];
   const currentCat = categories[currentCategory];
@@ -37,12 +41,36 @@ export default function PreDiagnosisPage() {
   const isCurrentCategoryComplete = currentQuestions.every(q => answers[q.id] !== undefined);
   const isAllComplete = diagnosisQuestions.every(q => answers[q.id] !== undefined);
 
-  const handleSubmit = () => {
-    if (isAllComplete) setSubmitted(true);
+  const handleSubmit = async () => {
+    if (!isAllComplete) return;
+
+    const scores: Record<string, number> = {};
+    categories.forEach(cat => {
+      const catQ = diagnosisQuestions.filter(q => q.category === cat);
+      const avg = catQ.reduce((s, q) => s + (answers[q.id] || 0), 0) / catQ.length;
+      scores[categoryToScoreKey[cat] || cat] = +avg.toFixed(1);
+    });
+
+    // DB에 저장 (participantId와 hackathonId가 세션에 있는 경우만)
+    const user = session?.user as { participantId?: string; hackathonId?: string } | undefined;
+    if (user?.participantId && user?.hackathonId) {
+      setSaving(true);
+      try {
+        await fetch('/api/diagnosis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hackathonId: user.hackathonId, type: 'pre', scores }),
+        });
+      } catch {
+        // 저장 실패해도 UI는 계속 진행
+      }
+      setSaving(false);
+    }
+
+    setSubmitted(true);
   };
 
   if (submitted) {
-    // 점수 계산
     const scores: Record<string, number> = {};
     categories.forEach(cat => {
       const catQ = diagnosisQuestions.filter(q => q.category === cat);
@@ -200,14 +228,14 @@ export default function PreDiagnosisPage() {
         ) : (
           <button
             onClick={handleSubmit}
-            disabled={!isAllComplete}
+            disabled={!isAllComplete || saving}
             className={`flex-1 py-3 rounded-xl font-semibold transition-colors ${
-              isAllComplete
+              isAllComplete && !saving
                 ? 'bg-emerald-600 text-white hover:bg-emerald-700'
                 : 'bg-slate-100 text-slate-400 cursor-not-allowed'
             }`}
           >
-            {isAllComplete ? '진단 제출하기 ✓' : `${diagnosisQuestions.length - totalAnswered}문항 남음`}
+            {saving ? '저장 중...' : isAllComplete ? '진단 제출하기 ✓' : `${diagnosisQuestions.length - totalAnswered}문항 남음`}
           </button>
         )}
       </div>
