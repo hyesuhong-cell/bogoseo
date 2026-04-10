@@ -3,6 +3,7 @@ import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { authConfig } from './auth.config';
 import { mockParticipants } from './lib/mockData';
+import { findUserByStudentId } from './lib/userStore';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -47,22 +48,34 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.studentId || !credentials?.password) return null;
+        const sid = credentials.studentId as string;
+        const pwd = credentials.password as string;
 
-        // 실제 운영 시 DB 쿼리로 교체
-        const participant = mockParticipants.find(
-          (p) => p.studentId === credentials.studentId
-        );
+        // 1. 초대 링크로 가입한 사용자 확인 (우선)
+        const registered = findUserByStudentId(sid);
+        if (registered) {
+          const isValid = await bcrypt.compare(pwd, registered.passwordHash);
+          if (!isValid) return null;
+          return {
+            id: registered.id,
+            name: registered.name,
+            email: registered.email,
+            role: 'participant',
+            studentId: registered.studentId,
+            participantId: registered.id,
+          };
+        }
+
+        // 2. 기존 mockData 참가자 (데모용)
+        const participant = mockParticipants.find(p => p.studentId === sid);
         if (!participant) return null;
 
-        // 초기 비밀번호: 학번과 동일 (운영 시 bcrypt 해시로 교체)
-        const defaultPassword = participant.studentId;
         const storedHash = participant.passwordHash;
-
         let isValid = false;
         if (storedHash) {
-          isValid = await bcrypt.compare(credentials.password as string, storedHash);
+          isValid = await bcrypt.compare(pwd, storedHash);
         } else {
-          isValid = credentials.password === defaultPassword;
+          isValid = pwd === participant.studentId; // 초기 비밀번호: 학번
         }
         if (!isValid) return null;
 

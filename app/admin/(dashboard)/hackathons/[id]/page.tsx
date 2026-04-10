@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { mockHackathons, mockParticipants, mockTeams, mockSurveys } from '@/lib/mockData';
 import { notFound } from 'next/navigation';
+import InviteLinkButton from '@/components/InviteLinkButton';
 
 export default async function HackathonDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -88,8 +89,11 @@ export default async function HackathonDetailPage({ params }: { params: Promise<
         ))}
       </div>
 
+      {/* 초대 링크 */}
+      <InviteLinkButton hackathonId={id} />
+
       {/* 트랙 구성 */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-6">
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-6 mt-4">
         <h2 className="font-bold text-slate-800 mb-4">트랙 구성</h2>
         <div className="grid grid-cols-2 gap-3">
           {hackathon.tracks.map((track, i) => {
