@@ -18,7 +18,7 @@ export interface DiagnosisResult {
   completedAt: string;
 }
 
-export async function saveDiagnosisResult(data: Omit<DiagnosisResult, 'id' | 'completedAt'>) {
+export async function saveDiagnosisResult(data: Omit<DiagnosisResult, 'id' | 'completedAt' | 'totalScore'>) {
   const id = `diag-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
   const totalScore = Object.values(data.scores).reduce((a, b) => a + b, 0) / 5;
 
