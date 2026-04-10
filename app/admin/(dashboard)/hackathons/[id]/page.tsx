@@ -3,17 +3,36 @@ import { mockHackathons, mockParticipants, mockTeams, mockSurveys } from '@/lib/
 import { notFound, forbidden } from 'next/navigation';
 import InviteLinkButton from '@/components/InviteLinkButton';
 import { auth } from '@/auth';
+import { getHackathon } from '@/lib/hackathonStore';
 
 export default async function HackathonDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const hackathon = mockHackathons.find(h => h.id === id);
-  if (!hackathon) notFound();
-
-  // 어드민은 자기 대학 해커톤만 접근 가능
   const session = await auth();
   const role = (session?.user as { role?: string })?.role;
   const university = (session?.user as { university?: string })?.university;
-  if (role === 'admin' && hackathon.university !== university) forbidden();
+
+  // mockData → DB 순으로 조회
+  const mockData = mockHackathons.find(h => h.id === id);
+  const dbData = mockData ? null : await getHackathon(id);
+  const raw = mockData ?? dbData;
+  if (!raw) notFound();
+
+  // 어드민 권한 확인
+  if (role === 'admin' && university && raw.university !== university) forbidden();
+
+  // 공통 형식으로 정규화
+  const hackathon = {
+    id: raw.id,
+    name: raw.name,
+    university: raw.university,
+    theme: raw.theme ?? '',
+    category: (raw as { category?: string }).category ?? '',
+    status: raw.status,
+    startDate: raw.startDate,
+    endDate: raw.endDate,
+    venue: raw.venue ?? '',
+    tracks: raw.tracks ?? [],
+  };
 
   const participants = mockParticipants.filter(p => p.hackathonId === id);
   const teams = mockTeams.filter(t => t.hackathonId === id);
@@ -32,6 +51,13 @@ export default async function HackathonDetailPage({ params }: { params: Promise<
     { label: '성과 리포트', href: `/admin/hackathons/${id}/report` },
   ];
 
+  const statusLabel = hackathon.status === 'completed' ? '완료' : hackathon.status === 'ongoing' ? '진행중' : '예정';
+  const statusClass = hackathon.status === 'completed'
+    ? 'bg-emerald-400/30 text-emerald-100'
+    : hackathon.status === 'ongoing'
+    ? 'bg-blue-400/30 text-blue-100'
+    : 'bg-amber-400/30 text-amber-100';
+
   return (
     <div className="p-8 fade-in">
       {/* 브레드크럼 */}
@@ -47,17 +73,20 @@ export default async function HackathonDetailPage({ params }: { params: Promise<
           <div>
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-2xl font-bold">{hackathon.name}</h1>
-              <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                hackathon.status === 'completed' ? 'bg-emerald-400/30 text-emerald-100' : 'bg-amber-400/30 text-amber-100'
-              }`}>
-                {hackathon.status === 'completed' ? '완료' : '예정'}
+              <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusClass}`}>
+                {statusLabel}
               </span>
+              {hackathon.category && (
+                <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-white/10 text-white/80">
+                  {hackathon.category}
+                </span>
+              )}
             </div>
-            <p className="text-blue-200 text-sm mb-4">{hackathon.theme}</p>
+            {hackathon.theme && <p className="text-blue-200 text-sm mb-4">{hackathon.theme}</p>}
             <div className="flex gap-5 text-sm text-blue-100">
               <span>🏫 {hackathon.university}</span>
               <span>📅 {hackathon.startDate} ~ {hackathon.endDate}</span>
-              <span>📍 {hackathon.venue}</span>
+              {hackathon.venue && <span>📍 {hackathon.venue}</span>}
             </div>
           </div>
           <Link href={`/admin/hackathons/${id}/report`} className="bg-white text-blue-700 px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-blue-50 transition-colors">
@@ -100,26 +129,28 @@ export default async function HackathonDetailPage({ params }: { params: Promise<
       <InviteLinkButton hackathonId={id} />
 
       {/* 트랙 구성 */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-6 mt-4">
-        <h2 className="font-bold text-slate-800 mb-4">트랙 구성</h2>
-        <div className="grid grid-cols-2 gap-3">
-          {hackathon.tracks.map((track, i) => {
-            const trackTeams = teams.filter(t => t.trackId === track.id);
-            return (
-              <div key={track.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold ${
-                  ['bg-blue-500', 'bg-emerald-500', 'bg-violet-500', 'bg-orange-500'][i % 4]
-                }`}>{i + 1}</div>
-                <div>
-                  <div className="text-sm font-medium text-slate-800">{track.name}</div>
-                  <div className="text-xs text-slate-400">{track.description}</div>
+      {hackathon.tracks.length > 0 && (
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-6 mt-4">
+          <h2 className="font-bold text-slate-800 mb-4">트랙 구성</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {hackathon.tracks.map((track, i) => {
+              const trackTeams = teams.filter(t => (t as { trackId?: string }).trackId === track.id);
+              return (
+                <div key={track.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold ${
+                    ['bg-blue-500', 'bg-emerald-500', 'bg-violet-500', 'bg-orange-500'][i % 4]
+                  }`}>{i + 1}</div>
+                  <div>
+                    <div className="text-sm font-medium text-slate-800">{track.name}</div>
+                    <div className="text-xs text-slate-400">{track.description}</div>
+                  </div>
+                  <div className="ml-auto text-sm font-bold text-slate-600">{trackTeams.length}팀</div>
                 </div>
-                <div className="ml-auto text-sm font-bold text-slate-600">{trackTeams.length}팀</div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
