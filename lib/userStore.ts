@@ -8,6 +8,7 @@ export interface RegisteredUser {
   email: string;
   major: string;
   grade: number;
+  gender: string;
   passwordHash: string;
   registeredAt: string;
 }
@@ -22,6 +23,7 @@ export async function saveUser(user: RegisteredUser) {
     password_hash: user.passwordHash,
     department: user.major,
     grade: user.grade,
+    gender: user.gender,
     created_at: user.registeredAt,
   });
 }
@@ -42,6 +44,7 @@ export async function findUserByStudentId(studentId: string): Promise<Registered
     hackathonId: data.hackathon_id,
     major: data.department ?? '',
     grade: data.grade ?? 1,
+    gender: data.gender ?? '',
     passwordHash: data.password_hash,
     registeredAt: data.created_at,
   };
@@ -71,6 +74,7 @@ export async function listParticipantsByHackathon(hackathonId: string): Promise<
     hackathonId: d.hackathon_id,
     major: d.department ?? '',
     grade: d.grade ?? 1,
+    gender: d.gender ?? '',
     passwordHash: d.password_hash,
     registeredAt: d.created_at,
   }));

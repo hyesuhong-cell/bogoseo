@@ -27,7 +27,7 @@ export default async function ParticipantsPage({ params }: { params: Promise<{ i
     major: u.major,
     majorCategory: u.major,
     grade: u.grade,
-    gender: '-' as string,
+    gender: u.gender || '-',
     teamId: null as string | null,
     isExternal: false,
     preScore: null as number | null,

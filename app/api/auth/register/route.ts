@@ -7,7 +7,7 @@ import { getHackathon } from '@/lib/hackathonStore';
 
 export async function POST(req: NextRequest) {
   try {
-    const { token, name, studentId, email, major, grade, password } = await req.json();
+    const { token, name, studentId, email, major, grade, gender, password } = await req.json();
 
     // 1. 토큰 검증
     const tokenData = verifyInviteToken(token);
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. 입력값 검증
-    if (!name || !studentId || !email || !major || !grade || !password) {
+    if (!name || !studentId || !email || !major || !grade || !gender || !password) {
       return NextResponse.json({ error: '모든 항목을 입력해주세요.' }, { status: 400 });
     }
     if (password.length < 6) {
@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
       email,
       major,
       grade: Number(grade),
+      gender,
       passwordHash,
       registeredAt: new Date().toISOString(),
     });

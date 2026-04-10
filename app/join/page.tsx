@@ -59,6 +59,7 @@ function JoinForm() {
   const [email, setEmail] = useState('');
   const [major, setMajor] = useState('');
   const [grade, setGrade] = useState('1');
+  const [gender, setGender] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
 
@@ -83,6 +84,7 @@ function JoinForm() {
     if (!studentId.trim()) e.studentId = '학번을 입력해주세요';
     if (!email.includes('@')) e.email = '올바른 이메일을 입력해주세요';
     if (!major) e.major = '학과를 선택해주세요';
+    if (!gender) e.gender = '성별을 선택해주세요';
     if (password.length < 6) e.password = '비밀번호는 6자 이상이어야 합니다';
     if (password !== passwordConfirm) e.passwordConfirm = '비밀번호가 일치하지 않습니다';
     setErrors(e);
@@ -97,7 +99,7 @@ function JoinForm() {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, name, studentId, email, major, grade: Number(grade), password, passwordConfirm }),
+      body: JSON.stringify({ token, name, studentId, email, major, grade: Number(grade), gender, password, passwordConfirm }),
     });
     const data = await res.json();
     setLoading(false);
@@ -172,7 +174,7 @@ function JoinForm() {
                 placeholder="student@university.ac.kr" className={inputClass(errors.email)} />
             </Field>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <Field label="학과" id="major" error={errors.major}>
                 <select id="major" value={major} onChange={e => setMajor(e.target.value)}
                   className={inputClass(errors.major)}>
@@ -184,6 +186,15 @@ function JoinForm() {
                 <select id="grade" value={grade} onChange={e => setGrade(e.target.value)}
                   className={inputClass(errors.grade)}>
                   {[1,2,3,4].map(g => <option key={g} value={g}>{g}학년</option>)}
+                </select>
+              </Field>
+              <Field label="성별" id="gender" error={errors.gender}>
+                <select id="gender" value={gender} onChange={e => setGender(e.target.value)}
+                  className={inputClass(errors.gender)}>
+                  <option value="">선택</option>
+                  <option value="남성">남성</option>
+                  <option value="여성">여성</option>
+                  <option value="기타">기타</option>
                 </select>
               </Field>
             </div>
