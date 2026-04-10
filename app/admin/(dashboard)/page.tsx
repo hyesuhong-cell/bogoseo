@@ -5,6 +5,7 @@ import { auth } from '@/auth';
 import { listHackathons } from '@/lib/hackathonStore';
 import { countParticipantsByHackathons } from '@/lib/userStore';
 import { getHackathonDiagnosisStats } from '@/lib/diagnosisStore';
+import type { HackathonCategory } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +32,7 @@ export default async function AdminDashboard() {
       university: h.university,
       startDate: h.startDate,
       status: h.status,
-      category: h.category,
+      category: h.category as HackathonCategory,
     })),
     ...mockOnlyHackathons.map(h => ({
       id: h.id,
@@ -39,7 +40,7 @@ export default async function AdminDashboard() {
       university: h.university,
       startDate: h.startDate,
       status: h.status,
-      category: h.category,
+      category: h.category as HackathonCategory,
     })),
   ];
 
