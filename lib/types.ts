@@ -2,6 +2,8 @@
 
 export type UserRole = 'admin' | 'participant';
 
+export type HackathonCategory = '사회문제해결' | '창업·MVP' | '기술개발' | '교육·인재';
+
 export interface Hackathon {
   id: string;
   name: string;
@@ -13,6 +15,7 @@ export interface Hackathon {
   host: string;
   organizer: string;
   status: 'upcoming' | 'ongoing' | 'completed';
+  category: HackathonCategory;
   description: string;
   maxTeams: number;
   maxMembersPerTeam: number;

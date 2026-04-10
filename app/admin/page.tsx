@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { mockHackathons, mockParticipants, mockTeams, mockSurveys } from '@/lib/mockData';
+import HackathonListWithTabs from '@/components/HackathonListWithTabs';
 
 export default function AdminDashboard() {
   const completed = mockHackathons.filter(h => h.status === 'completed');
@@ -40,32 +41,17 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-6">
-        {/* 해커톤 목록 */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="font-bold text-slate-800">해커톤 현황</h2>
-            <Link href="/admin/hackathons" className="text-blue-600 text-sm font-medium hover:underline">모두 보기 →</Link>
-          </div>
-          <div className="space-y-3">
-            {mockHackathons.map(h => (
-              <Link key={h.id} href={`/admin/hackathons/${h.id}`}>
-                <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
-                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${h.status === 'completed' ? 'bg-emerald-500' : h.status === 'ongoing' ? 'bg-blue-500' : 'bg-amber-400'}`}></div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-slate-800 truncate">{h.name}</div>
-                    <div className="text-xs text-slate-400">{h.university} · {h.startDate}</div>
-                  </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${
-                    h.status === 'completed' ? 'bg-emerald-50 text-emerald-700' :
-                    h.status === 'ongoing' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'
-                  }`}>
-                    {h.status === 'completed' ? '완료' : h.status === 'ongoing' ? '진행중' : '예정'}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
+        {/* 해커톤 목록 (카테고리 탭 포함) */}
+        <HackathonListWithTabs
+          hackathons={mockHackathons.map(h => ({
+            id: h.id,
+            name: h.name,
+            university: h.university,
+            startDate: h.startDate,
+            status: h.status,
+            category: h.category,
+          }))}
+        />
 
         {/* AI 역량 성장 요약 */}
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">

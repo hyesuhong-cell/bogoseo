@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { mockHackathons, mockParticipants, mockTeams, mockSurveys, mockFollowUps, mockBenchmarkData } from '@/lib/mockData';
 import { notFound } from 'next/navigation';
 import ReportCharts from './ReportCharts';
+import ReportSectionNav from './ReportSectionNav';
 import ExecutiveSummary from '@/components/ExecutiveSummary';
 import CompetencyHeatmap from '@/components/CompetencyHeatmap';
 import BenchmarkComparison from '@/components/BenchmarkComparison';
@@ -207,6 +208,9 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         <ReportActions data={reportData} />
       </div>
 
+      {/* ===== Section Navigation Tabs ===== */}
+      <ReportSectionNav />
+
       {/* ===== Executive Summary (1페이지) ===== */}
       <div className="mb-12" id="executive-summary">
         <ExecutiveSummary
@@ -228,8 +232,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       <div className="print:page-break-before-always"></div>
 
       {/* ===== 1. 행사 개요 ===== */}
-      {/* ===== 1. 행사 개요 ===== */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-6">
+      <div id="sec-overview" className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-6">
         <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
           <span className="w-7 h-7 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center text-sm font-bold">1</span>
           행사 개요
@@ -259,7 +262,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
               'SW·AI 관련 기술 스택 활용 경험 제공',
             ].map((goal, i) => (
               <div key={i} className="flex items-start gap-2 text-sm text-slate-600 bg-blue-50 rounded-lg p-2.5">
-                <span className="text-blue-600 font-bold flex-shrink-0">{'①②③④'[i]}</span>
+                <span className="text-blue-600 font-bold flex-shrink-0">{['①','②','③','④'][i]}</span>
                 <span>{goal}</span>
               </div>
             ))}
@@ -267,8 +270,8 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         </div>
       </div>
 
-      {/* ===== 3. 참가 현황 통계 ===== */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-6">
+      {/* ===== 2. 참가 현황 통계 ===== */}
+      <div id="sec-participants" className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-6">
         <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
           <span className="w-7 h-7 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center text-sm font-bold">2</span>
           참가자 통계 및 현황
@@ -294,8 +297,8 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         <ReportCharts data={chartData} section="participation" />
       </div>
 
-      {/* ===== 4. AI 역량 진단 결과 (핵심!) ===== */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-6">
+      {/* ===== 3. AI 역량 진단 결과 (핵심!) ===== */}
+      <div id="sec-diagnosis" className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-6">
         <h2 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
           <span className="w-7 h-7 bg-violet-100 text-violet-700 rounded-lg flex items-center justify-center text-sm font-bold">3</span>
           AI 역량 사전/사후 진단 결과
@@ -363,7 +366,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* ===== 3-1. 참가자 역량 분포 히트맵 ===== */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-6">
+      <div id="sec-heatmap" className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-6">
         <h2 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
           <span className="w-7 h-7 bg-violet-100 text-violet-700 rounded-lg flex items-center justify-center text-sm font-bold">3.1</span>
           전체 참가자 역량 분포 히트맵
@@ -447,7 +450,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* ===== 3-2. 타 대학 벤치마크 ===== */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-6">
+      <div id="sec-benchmark" className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-6">
         <h2 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
           <span className="w-7 h-7 bg-indigo-100 text-indigo-700 rounded-lg flex items-center justify-center text-sm font-bold">3.2</span>
           타 대학 벤치마크 비교
@@ -463,8 +466,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* ===== 4. 프로젝트 성과 ===== */}
-      {/* ===== 4. 프로젝트 성과 ===== */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-6">
+      <div id="sec-projects" className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-6">
         <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
           <span className="w-7 h-7 bg-emerald-100 text-emerald-700 rounded-lg flex items-center justify-center text-sm font-bold">4</span>
           팀별 프로젝트 성과
@@ -520,7 +522,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* ===== 5. 심사 결과 ===== */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-6">
+      <div id="sec-evaluation" className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-6">
         <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
           <span className="w-7 h-7 bg-yellow-100 text-yellow-700 rounded-lg flex items-center justify-center text-sm font-bold">5</span>
           심사 기준 및 수상 내역
@@ -588,7 +590,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* ===== 6. 참가자 피드백 ===== */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-6">
+      <div id="sec-feedback" className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-6">
         <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
           <span className="w-7 h-7 bg-pink-100 text-pink-700 rounded-lg flex items-center justify-center text-sm font-bold">6</span>
           참가자 피드백 및 만족도
@@ -656,7 +658,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* ===== 7. 후속 트래킹 ===== */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-6">
+      <div id="sec-followup" className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-6">
         <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
           <span className="w-7 h-7 bg-cyan-100 text-cyan-700 rounded-lg flex items-center justify-center text-sm font-bold">7</span>
           후속 성과 트래킹 (3개월)
@@ -705,7 +707,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* ===== 8. 종합 결론 ===== */}
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-7 text-white">
+      <div id="sec-conclusion" className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-7 text-white">
         <h2 className="text-lg font-bold mb-5 flex items-center gap-2">
           <span className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center text-sm font-bold">8</span>
           종합 결론 및 향후 계획
