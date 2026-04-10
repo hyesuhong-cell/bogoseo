@@ -71,3 +71,48 @@ export async function getParticipantDiagnosis(participantId: string, hackathonId
   const post = data?.find(d => d.type === 'post');
   return { pre, post };
 }
+
+export interface DiagnosisAggStats {
+  diagnosedCount: number;
+  preAvg: DiagnosisScores | null;
+  postAvg: DiagnosisScores | null;
+}
+
+export async function getHackathonDiagnosisStats(hackathonIds: string[]): Promise<DiagnosisAggStats> {
+  if (hackathonIds.length === 0) return { diagnosedCount: 0, preAvg: null, postAvg: null };
+
+  const { data } = await supabase
+    .from('diagnosis_results')
+    .select('*')
+    .in('hackathon_id', hackathonIds);
+
+  if (!data || data.length === 0) return { diagnosedCount: 0, preAvg: null, postAvg: null };
+
+  const pre = data.filter(d => d.type === 'pre');
+  const post = data.filter(d => d.type === 'post');
+  const postIds = new Set(post.map(d => d.participant_id));
+  const diagnosedCount = pre.filter(d => postIds.has(d.participant_id)).length;
+
+  function avgScores(results: typeof data): DiagnosisScores | null {
+    if (results.length === 0) return null;
+    const sum = { aiUnderstanding: 0, toolUsage: 0, problemSolving: 0, collaboration: 0, ethics: 0 };
+    results.forEach(r => {
+      const s = r.scores as Record<string, number>;
+      sum.aiUnderstanding += s.aiUnderstanding ?? 0;
+      sum.toolUsage += s.toolUsage ?? 0;
+      sum.problemSolving += s.problemSolving ?? 0;
+      sum.collaboration += s.collaboration ?? 0;
+      sum.ethics += s.ethics ?? 0;
+    });
+    const n = results.length;
+    return {
+      aiUnderstanding: Math.round(sum.aiUnderstanding / n * 10) / 10,
+      toolUsage: Math.round(sum.toolUsage / n * 10) / 10,
+      problemSolving: Math.round(sum.problemSolving / n * 10) / 10,
+      collaboration: Math.round(sum.collaboration / n * 10) / 10,
+      ethics: Math.round(sum.ethics / n * 10) / 10,
+    };
+  }
+
+  return { diagnosedCount, preAvg: avgScores(pre), postAvg: avgScores(post) };
+}

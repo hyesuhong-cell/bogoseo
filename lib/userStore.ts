@@ -50,6 +50,29 @@ export async function findUserByStudentId(studentId: string): Promise<Registered
   };
 }
 
+export async function countParticipantsByHackathons(hackathonIds: string[]): Promise<number> {
+  if (hackathonIds.length === 0) return 0;
+  const { count } = await supabase
+    .from('registered_participants')
+    .select('id', { count: 'exact', head: true })
+    .in('hackathon_id', hackathonIds);
+  return count ?? 0;
+}
+
+export async function countParticipantsPerHackathon(hackathonIds: string[]): Promise<Record<string, number>> {
+  if (hackathonIds.length === 0) return {};
+  const { data } = await supabase
+    .from('registered_participants')
+    .select('hackathon_id')
+    .in('hackathon_id', hackathonIds);
+
+  const counts: Record<string, number> = {};
+  (data ?? []).forEach(row => {
+    counts[row.hackathon_id] = (counts[row.hackathon_id] ?? 0) + 1;
+  });
+  return counts;
+}
+
 export async function isStudentIdTaken(studentId: string): Promise<boolean> {
   const { count } = await supabase
     .from('registered_participants')

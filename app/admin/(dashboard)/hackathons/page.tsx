@@ -1,7 +1,10 @@
 import Link from 'next/link';
 import { mockHackathons, mockParticipants, mockTeams } from '@/lib/mockData';
 import { listHackathons } from '@/lib/hackathonStore';
+import { countParticipantsPerHackathon } from '@/lib/userStore';
 import { auth } from '@/auth';
+
+export const dynamic = 'force-dynamic';
 
 export default async function HackathonsPage() {
   const session = await auth();
@@ -24,6 +27,9 @@ export default async function HackathonsPage() {
     ...dbHackathons.map(h => ({ ...h, isDb: true })),
     ...mockOnly.map(h => ({ ...h, startDate: h.startDate, endDate: h.endDate, isDb: false })),
   ];
+
+  // DB 해커톤별 참가자 수
+  const dbParticipantCounts = await countParticipantsPerHackathon(dbHackathons.map(h => h.id));
 
   return (
     <div className="p-8 fade-in">
@@ -62,9 +68,13 @@ export default async function HackathonsPage() {
       ) : (
         <div className="space-y-4">
           {allHackathons.map(h => {
-            const participants = mockParticipants.filter(p => p.hackathonId === h.id);
+            const mockParticipantCount = mockParticipants.filter(p => p.hackathonId === h.id).length;
+            const dbParticipantCount = dbParticipantCounts[h.id] ?? 0;
+            const totalParticipants = mockParticipantCount + dbParticipantCount;
+
             const teams = mockTeams.filter(t => t.hackathonId === h.id);
-            const diagnosedCount = participants.filter(p => p.preScore && p.postScore).length;
+            const diagnosedCount = mockParticipants
+              .filter(p => p.hackathonId === h.id && p.preScore && p.postScore).length;
 
             return (
               <div key={h.id} className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
@@ -94,8 +104,11 @@ export default async function HackathonsPage() {
                     </div>
                     <div className="flex gap-6">
                       <div className="text-center">
-                        <div className="text-xl font-bold text-blue-600">{participants.length}</div>
+                        <div className="text-xl font-bold text-blue-600">{totalParticipants}</div>
                         <div className="text-xs text-slate-400">참가자</div>
+                        {dbParticipantCount > 0 && (
+                          <div className="text-xs text-blue-400">초대 {dbParticipantCount}명</div>
+                        )}
                       </div>
                       <div className="text-center">
                         <div className="text-xl font-bold text-violet-600">{teams.length}</div>
