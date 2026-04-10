@@ -50,13 +50,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
+        // 이메일 정규화 (대소문자, 공백 제거)
+        const email = (credentials.email as string).trim().toLowerCase();
+        const password = (credentials.password as string).trim();
+
         // 1. superadmin이 생성한 어드민 계정 확인 (우선)
-        const adminAccount = await findAdminByEmail(credentials.email as string);
+        const adminAccount = await findAdminByEmail(email);
         if (adminAccount) {
-          const isValid = await bcrypt.compare(
-            credentials.password as string,
-            adminAccount.passwordHash
-          );
+          if (!adminAccount.passwordHash) return null;
+          const isValid = await bcrypt.compare(password, adminAccount.passwordHash);
           if (!isValid) return null;
           return {
             id: adminAccount.id,
@@ -72,12 +74,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
 
         if (!adminEmail || !adminPasswordHash) return null;
-        if (credentials.email !== adminEmail) return null;
+        if (email !== adminEmail.trim().toLowerCase()) return null;
 
-        const isValid = await bcrypt.compare(
-          credentials.password as string,
-          adminPasswordHash
-        );
+        const isValid = await bcrypt.compare(password, adminPasswordHash);
         if (!isValid) return null;
 
         return {

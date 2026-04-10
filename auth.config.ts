@@ -28,7 +28,11 @@ export const authConfig = {
 
       // 관리자 로그인 페이지
       if (path === '/admin/login') {
-        if (isLoggedIn && (role === 'admin' || role === 'superadmin')) {
+        if (isLoggedIn && role === 'superadmin') {
+          // 슈퍼어드민은 어드민 포탈 접근 불가 → 슈퍼어드민 포탈로
+          return Response.redirect(new URL('/superadmin', nextUrl));
+        }
+        if (isLoggedIn && role === 'admin') {
           return Response.redirect(new URL('/admin', nextUrl));
         }
         return true;
@@ -42,9 +46,15 @@ export const authConfig = {
         return true;
       }
 
-      // 관리자 전용 페이지
+      // 관리자 전용 페이지 (어드민 role만 접근, 슈퍼어드민은 자체 포탈 사용)
       if (path.startsWith('/admin')) {
-        if (!isLoggedIn || (role !== 'admin' && role !== 'superadmin')) {
+        if (!isLoggedIn) {
+          return Response.redirect(new URL('/admin/login', nextUrl));
+        }
+        if (role === 'superadmin') {
+          return Response.redirect(new URL('/superadmin', nextUrl));
+        }
+        if (role !== 'admin') {
           return Response.redirect(new URL('/admin/login', nextUrl));
         }
         return true;

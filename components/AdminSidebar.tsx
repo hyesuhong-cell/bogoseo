@@ -27,7 +27,6 @@ const navItems = [
 export default function AdminSidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const isSuperAdmin = (session?.user as { role?: string })?.role === 'superadmin';
 
   return (
     <aside className="w-60 bg-slate-900 min-h-screen flex flex-col">
@@ -79,23 +78,14 @@ export default function AdminSidebar() {
             </div>
           </div>
         )}
-        {isSuperAdmin ? (
-          <Link href="/superadmin" className="flex items-center gap-2 text-purple-400 hover:text-purple-200 text-sm transition-colors">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 17l-5-5m0 0l5-5m-5 5h12" />
-            </svg>
-            슈퍼어드민 포털로
-          </Link>
-        ) : (
-          <Link href="/" className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 17l-5-5m0 0l5-5m-5 5h12" />
-            </svg>
-            홈으로
-          </Link>
-        )}
+        <Link href="/" className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+          </svg>
+          홈으로
+        </Link>
         <button
-          onClick={() => signOut({ callbackUrl: isSuperAdmin ? '/superadmin/login' : '/admin/login' })}
+          onClick={() => signOut({ callbackUrl: '/admin/login' })}
           className="flex items-center gap-2 text-slate-400 hover:text-red-400 text-sm transition-colors w-full"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

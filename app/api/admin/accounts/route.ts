@@ -44,7 +44,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '비밀번호는 8자 이상이어야 합니다.' }, { status: 400 });
   }
 
-  if (await isAdminEmailTaken(email)) {
+  const normalizedEmail = email.trim().toLowerCase();
+
+  if (await isAdminEmailTaken(normalizedEmail)) {
     return NextResponse.json({ error: '이미 사용 중인 이메일입니다.' }, { status: 409 });
   }
 
@@ -52,7 +54,7 @@ export async function POST(req: NextRequest) {
   const admin: AdminAccount = {
     id: `admin-${Date.now()}`,
     name,
-    email,
+    email: normalizedEmail,
     university,
     passwordHash,
     createdAt: new Date().toISOString(),

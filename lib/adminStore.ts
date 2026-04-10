@@ -11,7 +11,7 @@ export interface AdminAccount {
 }
 
 export async function saveAdmin(admin: AdminAccount) {
-  await supabase.from('admin_accounts').upsert({
+  const { error } = await supabase.from('admin_accounts').upsert({
     id: admin.id,
     name: admin.name,
     email: admin.email,
@@ -20,13 +20,14 @@ export async function saveAdmin(admin: AdminAccount) {
     created_at: admin.createdAt,
     created_by: admin.createdBy,
   });
+  if (error) throw new Error(error.message);
 }
 
 export async function findAdminByEmail(email: string): Promise<AdminAccount | undefined> {
   const { data } = await supabase
     .from('admin_accounts')
     .select('*')
-    .eq('email', email)
+    .eq('email', email.trim().toLowerCase())
     .single();
 
   if (!data) return undefined;
