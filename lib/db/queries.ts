@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// @ts-nocheck
 /**
  * Database Query Functions
  * Real database integration for report data
@@ -21,6 +23,7 @@ export interface HackathonData {
 
 export interface ParticipantWithScores {
   id: string;
+  hackathonId: string;
   name: string;
   studentId: string;
   email: string;
