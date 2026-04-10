@@ -10,9 +10,25 @@ export const authConfig = {
       const role = (auth?.user as { role?: string })?.role;
       const path = nextUrl.pathname;
 
+      // 슈퍼어드민 로그인 페이지
+      if (path === '/superadmin/login') {
+        if (isLoggedIn && role === 'superadmin') {
+          return Response.redirect(new URL('/superadmin', nextUrl));
+        }
+        return true;
+      }
+
+      // 슈퍼어드민 전용 페이지
+      if (path.startsWith('/superadmin')) {
+        if (!isLoggedIn || role !== 'superadmin') {
+          return Response.redirect(new URL('/superadmin/login', nextUrl));
+        }
+        return true;
+      }
+
       // 관리자 로그인 페이지
       if (path === '/admin/login') {
-        if (isLoggedIn && role === 'admin') {
+        if (isLoggedIn && (role === 'admin' || role === 'superadmin')) {
           return Response.redirect(new URL('/admin', nextUrl));
         }
         return true;
@@ -28,7 +44,7 @@ export const authConfig = {
 
       // 관리자 전용 페이지
       if (path.startsWith('/admin')) {
-        if (!isLoggedIn || role !== 'admin') {
+        if (!isLoggedIn || (role !== 'admin' && role !== 'superadmin')) {
           return Response.redirect(new URL('/admin/login', nextUrl));
         }
         return true;
@@ -49,6 +65,7 @@ export const authConfig = {
         token.role = (user as { role?: string }).role;
         token.studentId = (user as { studentId?: string }).studentId;
         token.participantId = (user as { participantId?: string }).participantId;
+        token.university = (user as { university?: string }).university;
       }
       return token;
     },
@@ -57,6 +74,7 @@ export const authConfig = {
         (session.user as { role?: string }).role = token.role as string;
         (session.user as { studentId?: string }).studentId = token.studentId as string;
         (session.user as { participantId?: string }).participantId = token.participantId as string;
+        (session.user as { university?: string }).university = token.university as string;
       }
       return session;
     },

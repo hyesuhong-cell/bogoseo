@@ -4,11 +4,43 @@ import bcrypt from 'bcryptjs';
 import { authConfig } from './auth.config';
 import { mockParticipants } from './lib/mockData';
 import { findUserByStudentId } from './lib/userStore';
+import { findAdminByEmail } from './lib/adminStore';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   providers: [
-    // ── 관리자 로그인 ──────────────────────────────
+    // ── 슈퍼어드민 로그인 ──────────────────────────────
+    Credentials({
+      id: 'superadmin',
+      credentials: {
+        email: {},
+        password: {},
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+
+        const superAdminEmail = process.env.SUPERADMIN_EMAIL;
+        const superAdminPasswordHash = process.env.SUPERADMIN_PASSWORD_HASH;
+
+        if (!superAdminEmail || !superAdminPasswordHash) return null;
+        if (credentials.email !== superAdminEmail) return null;
+
+        const isValid = await bcrypt.compare(
+          credentials.password as string,
+          superAdminPasswordHash
+        );
+        if (!isValid) return null;
+
+        return {
+          id: 'superadmin-001',
+          name: process.env.SUPERADMIN_NAME || 'UD임팩트 관리자',
+          email: credentials.email as string,
+          role: 'superadmin',
+        };
+      },
+    }),
+
+    // ── 관리자(대학 담당자) 로그인 ──────────────────────────────
     Credentials({
       id: 'admin',
       credentials: {
@@ -18,6 +50,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
+        // 1. superadmin이 생성한 어드민 계정 확인 (우선)
+        const adminAccount = findAdminByEmail(credentials.email as string);
+        if (adminAccount) {
+          const isValid = await bcrypt.compare(
+            credentials.password as string,
+            adminAccount.passwordHash
+          );
+          if (!isValid) return null;
+          return {
+            id: adminAccount.id,
+            name: adminAccount.name,
+            email: adminAccount.email,
+            role: 'admin',
+            university: adminAccount.university,
+          };
+        }
+
+        // 2. 환경변수 기본 관리자 계정 (fallback)
         const adminEmail = process.env.ADMIN_EMAIL;
         const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
 
