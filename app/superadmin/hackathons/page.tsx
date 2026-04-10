@@ -206,7 +206,7 @@ export default async function SuperAdminHackathonsPage() {
                         {/* 액션 */}
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <Link
-                            href={`/admin/hackathons/${h.id}`}
+                            href={`/superadmin/hackathons/${h.id}`}
                             className="px-3 py-1.5 text-xs font-medium bg-purple-600/40 hover:bg-purple-600/60 text-purple-200 rounded-lg transition-colors border border-purple-500/30"
                           >
                             상세 보기

@@ -26,9 +26,10 @@ interface HackathonItem {
 
 interface Props {
   hackathon: HackathonItem;
+  redirectAfterDelete?: string;
 }
 
-export default function HackathonManageActions({ hackathon }: Props) {
+export default function HackathonManageActions({ hackathon, redirectAfterDelete }: Props) {
   const router = useRouter();
 
   const [showEdit, setShowEdit] = useState(false);
@@ -78,7 +79,11 @@ export default function HackathonManageActions({ hackathon }: Props) {
     setDeleteLoading(false);
     if (res.ok) {
       setShowDelete(false);
-      router.refresh();
+      if (redirectAfterDelete) {
+        router.push(redirectAfterDelete);
+      } else {
+        router.refresh();
+      }
     }
   }
 
