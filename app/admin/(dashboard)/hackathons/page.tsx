@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { mockHackathons, mockParticipants, mockTeams } from '@/lib/mockData';
+import { listHackathons } from '@/lib/hackathonStore';
 import { auth } from '@/auth';
 
 export default async function HackathonsPage() {
@@ -7,10 +8,22 @@ export default async function HackathonsPage() {
   const role = (session?.user as { role?: string })?.role;
   const university = (session?.user as { university?: string })?.university;
 
-  // 슈퍼어드민은 전체, 어드민은 담당 대학만
-  const hackathons = role === 'superadmin'
+  // DB 해커톤 + mockData 병합
+  const dbHackathons = await listHackathons(role === 'superadmin' ? undefined : university);
+
+  const mockFiltered = role === 'superadmin'
     ? mockHackathons
     : mockHackathons.filter(h => h.university === university);
+
+  // DB에 없는 mock 해커톤만 추가 (id 기준)
+  const dbIds = new Set(dbHackathons.map(h => h.id));
+  const mockOnly = mockFiltered.filter(h => !dbIds.has(h.id));
+
+  // 통합 목록 (DB 우선, mock 후)
+  const allHackathons = [
+    ...dbHackathons.map(h => ({ ...h, isDb: true })),
+    ...mockOnly.map(h => ({ ...h, startDate: h.startDate, endDate: h.endDate, isDb: false })),
+  ];
 
   return (
     <div className="p-8 fade-in">
@@ -19,27 +32,36 @@ export default async function HackathonsPage() {
           <h1 className="text-2xl font-bold text-slate-900">해커톤 관리</h1>
           <p className="text-slate-500 mt-1">
             {role === 'superadmin'
-              ? `전체 ${hackathons.length}건`
-              : `${university ?? ''} · ${hackathons.length}건`}
+              ? `전체 ${allHackathons.length}건`
+              : `${university ?? ''} · ${allHackathons.length}건`}
           </p>
         </div>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2">
+        <Link
+          href="/admin/hackathons/new"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
+        >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
           새 해커톤 개설
-        </button>
+        </Link>
       </div>
 
-      {hackathons.length === 0 ? (
+      {allHackathons.length === 0 ? (
         <div className="bg-white rounded-xl p-16 shadow-sm border border-slate-100 text-center">
           <div className="text-5xl mb-4">🏆</div>
           <p className="text-slate-500 font-medium">담당 대학의 해커톤이 없습니다.</p>
-          <p className="text-slate-400 text-sm mt-1">새 해커톤을 개설하거나 슈퍼어드민에게 문의하세요.</p>
+          <p className="text-slate-400 text-sm mt-1">위의 버튼으로 첫 해커톤을 개설해보세요.</p>
+          <Link
+            href="/admin/hackathons/new"
+            className="inline-block mt-5 px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors"
+          >
+            첫 해커톤 개설하기
+          </Link>
         </div>
       ) : (
         <div className="space-y-4">
-          {hackathons.map(h => {
+          {allHackathons.map(h => {
             const participants = mockParticipants.filter(p => p.hackathonId === h.id);
             const teams = mockTeams.filter(t => t.hackathonId === h.id);
             const diagnosedCount = participants.filter(p => p.preScore && p.postScore).length;
@@ -59,11 +81,16 @@ export default async function HackathonsPage() {
                       <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500 font-medium">
                         {h.category}
                       </span>
+                      {h.isDb && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-500 font-medium border border-blue-100">
+                          DB
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-slate-500 mb-4">
                       <span>🏫 {h.university}</span>
                       <span>📅 {h.startDate} ~ {h.endDate}</span>
-                      <span>📍 {h.venue}</span>
+                      {h.venue && <span>📍 {h.venue}</span>}
                     </div>
                     <div className="flex gap-6">
                       <div className="text-center">
