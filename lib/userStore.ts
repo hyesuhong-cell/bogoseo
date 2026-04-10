@@ -14,7 +14,7 @@ export interface RegisteredUser {
 }
 
 export async function saveUser(user: RegisteredUser) {
-  await supabase.from('registered_participants').upsert({
+  const { error } = await supabase.from('registered_participants').upsert({
     id: user.id,
     name: user.name,
     email: user.email,
@@ -26,15 +26,20 @@ export async function saveUser(user: RegisteredUser) {
     gender: user.gender,
     created_at: user.registeredAt,
   });
+  if (error) throw new Error(`[saveUser] ${error.message}`);
 }
 
 export async function findUserByStudentId(studentId: string): Promise<RegisteredUser | undefined> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('registered_participants')
     .select('*')
-    .eq('student_id', studentId)
+    .eq('student_id', studentId.trim())
     .single();
 
+  if (error) {
+    if (error.code === 'PGRST116') return undefined; // no row
+    throw new Error(`[findUserByStudentId] ${error.message} (code: ${error.code})`);
+  }
   if (!data) return undefined;
   return {
     id: data.id,

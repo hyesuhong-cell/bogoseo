@@ -111,23 +111,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.studentId || !credentials?.password) return null;
-        const sid = credentials.studentId as string;
-        const pwd = credentials.password as string;
+        const sid = (credentials.studentId as string).trim();
+        const pwd = (credentials.password as string).trim();
 
         // 1. 초대 링크로 가입한 사용자 확인 (우선)
-        const registered = await findUserByStudentId(sid);
-        if (registered) {
-          const isValid = await bcrypt.compare(pwd, registered.passwordHash);
-          if (!isValid) return null;
-          return {
-            id: registered.id,
-            name: registered.name,
-            email: registered.email,
-            role: 'participant',
-            studentId: registered.studentId,
-            participantId: registered.id,
-            hackathonId: registered.hackathonId,
-          };
+        try {
+          const registered = await findUserByStudentId(sid);
+          if (registered) {
+            if (!registered.passwordHash) {
+              console.error('[participant auth] passwordHash null for:', sid);
+              return null;
+            }
+            const isValid = await bcrypt.compare(pwd, registered.passwordHash);
+            if (!isValid) {
+              console.error('[participant auth] bcrypt mismatch for:', sid);
+              return null;
+            }
+            return {
+              id: registered.id,
+              name: registered.name,
+              email: registered.email,
+              role: 'participant',
+              studentId: registered.studentId,
+              participantId: registered.id,
+              hackathonId: registered.hackathonId,
+            };
+          }
+        } catch (err) {
+          console.error('[participant auth] DB lookup failed:', err);
+          // DB 오류 시 mockData fallback으로 진행
         }
 
         // 2. 기존 mockData 참가자 (데모용)

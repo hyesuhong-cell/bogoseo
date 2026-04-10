@@ -53,7 +53,12 @@ export async function POST(req: NextRequest) {
     const hackathonName = (mockH ?? dbH)!.name;
     return NextResponse.json({ ok: true, hackathonName });
   } catch (e) {
-    console.error(e);
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error('[register]', msg);
+    // registered_participants 테이블 없을 때 안내
+    if (msg.includes('registered_participants') || msg.includes('does not exist')) {
+      return NextResponse.json({ error: 'DB 테이블이 없습니다. 관리자에게 문의해주세요.' }, { status: 500 });
+    }
     return NextResponse.json({ error: '서버 오류가 발생했습니다.' }, { status: 500 });
   }
 }
