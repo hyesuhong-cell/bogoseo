@@ -26,12 +26,8 @@ export const authConfig = {
         return true;
       }
 
-      // 관리자 로그인 페이지
+      // 관리자 로그인 페이지 (슈퍼어드민도 접근 가능 — 어드민으로 별도 로그인)
       if (path === '/admin/login') {
-        if (isLoggedIn && role === 'superadmin') {
-          // 슈퍼어드민은 어드민 포탈 접근 불가 → 슈퍼어드민 포탈로
-          return Response.redirect(new URL('/superadmin', nextUrl));
-        }
         if (isLoggedIn && role === 'admin') {
           return Response.redirect(new URL('/admin', nextUrl));
         }
