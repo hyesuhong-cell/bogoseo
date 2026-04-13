@@ -19,12 +19,7 @@
     cursor: default !important;
   }
 
-  /* ── 2. 레이아웃 : 어드민 flex → block, main 전체 너비 ────────── */
-  .flex.min-h-screen,
-  body > div {
-    display: block !important;
-  }
-
+  /* ── 2. main 전체 너비 (sidebar는 Tailwind print:hidden으로 처리) ── */
   main {
     width: 100% !important;
     max-width: 100% !important;

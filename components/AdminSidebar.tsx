@@ -35,7 +35,7 @@ export default function AdminSidebar() {
     const match = pathname.match(/^\/admin\/hackathons\/([^/]+)/);
     const hackathonId = match?.[1];
     return (
-      <aside className="w-60 bg-purple-950 min-h-screen flex flex-col border-r border-purple-800">
+      <aside className="print:hidden w-60 bg-purple-950 min-h-screen flex flex-col border-r border-purple-800">
         <div className="p-5 border-b border-purple-800">
           <div className="flex items-center gap-3 mb-1">
             <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">UD</div>
@@ -82,7 +82,7 @@ export default function AdminSidebar() {
   }
 
   return (
-    <aside className="w-60 bg-slate-900 min-h-screen flex flex-col">
+    <aside className="print:hidden w-60 bg-slate-900 min-h-screen flex flex-col">
       {/* 로고 */}
       <div className="p-5 border-b border-slate-700">
         <Link href="/" className="flex items-center gap-3">
