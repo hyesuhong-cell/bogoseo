@@ -190,8 +190,8 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="p-8 fade-in max-w-7xl mx-auto">
-      {/* 브레드크럼 */}
-      <div className="flex items-center gap-2 text-sm text-slate-500 mb-6">
+      {/* 브레드크럼 (인쇄 숨김) */}
+      <div className="no-print flex items-center gap-2 text-sm text-slate-500 mb-6">
         <Link href="/admin/hackathons" className="hover:text-slate-800">해커톤 관리</Link>
         <span>/</span>
         <Link href={`/admin/hackathons/${id}`} className="hover:text-slate-800">{hackathon.name}</Link>
@@ -199,8 +199,8 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         <span className="text-slate-800 font-medium">성과 추적 리포트</span>
       </div>
 
-      {/* Header with Export Actions */}
-      <div className="flex items-center justify-between mb-8">
+      {/* Header with Export Actions (인쇄 숨김) */}
+      <div className="no-print flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 mb-2">운영 성과 리포트</h1>
           <p className="text-slate-500">대학 실무진을 위한 상세 분석 보고서</p>
@@ -208,8 +208,8 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         <ReportActions data={reportData} />
       </div>
 
-      {/* ===== Section Navigation Tabs ===== */}
-      <ReportSectionNav />
+      {/* ===== Section Navigation Tabs (인쇄 숨김) ===== */}
+      <div className="no-print"><ReportSectionNav /></div>
 
       {/* ===== Executive Summary (1페이지) ===== */}
       <div className="mb-12" id="executive-summary">

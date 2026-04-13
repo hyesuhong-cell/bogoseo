@@ -1,13 +1,31 @@
 /* Print-specific styles for report PDF export */
 
 @media print {
-  /* Hide sidebar, navigation, and non-essential elements */
+  /* Hide sidebar, navigation, header and action buttons */
   nav,
   aside,
   header,
-  .no-print,
-  button:not(.print-keep) {
+  .no-print {
     display: none !important;
+  }
+
+  /* Hide action/interactive buttons but NOT buttons inside tables (heatmap sort buttons) */
+  button:not(.print-keep):not(th button):not(td button):not(thead button) {
+    display: none !important;
+  }
+
+  /* Re-expose buttons that live inside table headers (heatmap column sort buttons) */
+  th button,
+  thead button {
+    display: inline-flex !important;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font: inherit !important;
+    color: inherit !important;
+    cursor: default !important;
+    pointer-events: none;
   }
 
   /* Admin layout: remove flex so main fills the entire page */
@@ -37,30 +55,53 @@
     color-adjust: exact;
   }
 
-  /* Prevent page breaks inside important elements */
-  .page-break-inside-avoid {
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
+  /* ===== PAGE BREAK RULES ===== */
 
-  /* Force page breaks */
-  .page-break-before {
-    page-break-before: always;
-    break-before: always;
-  }
-
-  .page-break-after {
-    page-break-after: always;
-    break-after: always;
-  }
-
-  /* Executive Summary - full page */
+  /* Executive Summary occupies its own page */
   #executive-summary {
+    break-after: page;
     page-break-after: always;
-    break-after: always;
   }
 
-  /* Remove shadows and adjust colors for print */
+  /* Major sections start on a new page */
+  #sec-participants,
+  #sec-diagnosis,
+  #sec-heatmap,
+  #sec-awards,
+  #sec-satisfaction,
+  #sec-followup,
+  #sec-benchmark {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  /* Keep each section together; allow internal breaks only if section is too tall */
+  #sec-overview,
+  #sec-participants,
+  #sec-diagnosis,
+  #sec-awards,
+  #sec-satisfaction,
+  #sec-followup,
+  #sec-benchmark {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Heatmap is intentionally long — allow internal breaks but keep each sub-block intact */
+  #sec-heatmap .space-y-6 > div {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Keep score bars and chart blocks together */
+  .page-break-inside-avoid,
+  .bg-slate-50.rounded-xl,
+  .recharts-wrapper {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* ===== SHADOWS & BORDERS ===== */
   .shadow-xl,
   .shadow-lg,
   .shadow-md,
@@ -69,7 +110,7 @@
     border: 1px solid #e2e8f0;
   }
 
-  /* Ensure backgrounds print */
+  /* ===== COLOR BACKGROUNDS ===== */
   .bg-gradient-to-br,
   .bg-gradient-to-r,
   .bg-blue-50,
@@ -81,15 +122,24 @@
     print-color-adjust: exact;
   }
 
-  /* Charts should be visible */
+  /* ===== CHARTS ===== */
   svg {
     max-width: 100%;
     height: auto;
   }
 
-  /* Table improvements */
+  /* ===== HEATMAP TABLE ===== */
+  .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  .sticky {
+    position: relative !important;
+  }
+
   table {
-    page-break-inside: avoid;
+    width: 100% !important;
+    font-size: 8pt;
   }
 
   thead {
@@ -97,134 +147,68 @@
   }
 
   tr {
+    break-inside: avoid;
     page-break-inside: avoid;
-    page-break-after: auto;
   }
 
-  /* Adjust font sizes for print */
-  h1 {
-    font-size: 24pt;
+  th, td {
+    padding: 0.2rem 0.4rem !important;
+    font-size: 8pt;
+    line-height: 1.3;
   }
 
-  h2 {
-    font-size: 18pt;
-  }
+  /* ===== TYPOGRAPHY ===== */
+  h1 { font-size: 20pt; }
+  h2 { font-size: 14pt; }
+  h3 { font-size: 11pt; }
 
-  h3 {
-    font-size: 14pt;
-  }
-
-  body,
-  p,
-  td,
-  th {
-    font-size: 10pt;
+  body, p, td, th {
+    font-size: 9pt;
     line-height: 1.4;
   }
 
-  /* Remove hover effects */
-  *:hover {
-    background-color: inherit !important;
+  p, h2, h3 {
+    widows: 3;
+    orphans: 3;
   }
 
-  /* Optimize spacing */
-  .mb-12 {
-    margin-bottom: 2rem;
-  }
+  /* ===== SPACING ===== */
+  .mb-12 { margin-bottom: 1.5rem; }
+  .mb-8  { margin-bottom: 1rem; }
+  .mb-6  { margin-bottom: 0.75rem; }
 
-  .mb-8 {
-    margin-bottom: 1.5rem;
-  }
+  /* ===== LINKS & HOVER ===== */
+  a { text-decoration: none; color: inherit; }
+  *:hover { background-color: inherit !important; }
 
-  .mb-6 {
-    margin-bottom: 1rem;
-  }
+  /* ===== GRID ===== */
+  .grid { display: grid; grid-gap: 0.5rem; }
 
-  /* Hide interactive elements */
-  .hover\:bg-slate-50,
-  .hover\:text-slate-800,
-  .transition-colors,
-  .cursor-pointer {
-    cursor: default;
-  }
-
-  /* Breadcrumbs and navigation */
-  .breadcrumb {
-    font-size: 8pt;
-    color: #64748b;
-  }
-
-  /* Links */
-  a {
-    text-decoration: none;
-    color: inherit;
-  }
-
-  /* Heatmap optimizations */
-  .overflow-x-auto {
-    overflow: visible !important;
-  }
-
-  /* Ensure sticky columns work in print */
-  .sticky {
-    position: relative !important;
-  }
-
-  /* Charts container */
-  .recharts-wrapper {
-    page-break-inside: avoid;
-  }
-
-  /* Footer info */
+  /* ===== FOOTER / HEADER ===== */
   .print-footer {
     position: fixed;
     bottom: 0;
     width: 100%;
     text-align: center;
-    font-size: 8pt;
+    font-size: 7pt;
     color: #94a3b8;
-    padding: 0.5rem 0;
+    padding: 0.4rem 0;
     border-top: 1px solid #e2e8f0;
   }
 
-  /* Header for each page after first */
   .print-header {
     position: fixed;
     top: 0;
     width: 100%;
     background: white;
-    padding: 0.5rem 0;
+    padding: 0.4rem 0;
     border-bottom: 1px solid #e2e8f0;
-    font-size: 8pt;
+    font-size: 7pt;
     color: #64748b;
-  }
-
-  /* Avoid widows and orphans */
-  p,
-  h2,
-  h3 {
-    widows: 3;
-    orphans: 3;
-  }
-
-  /* Grid adjustments for print */
-  .grid {
-    display: grid;
-    grid-gap: 0.5rem;
-  }
-
-  /* Competency heatmap table adjustments */
-  .heatmap-table {
-    font-size: 8pt;
-  }
-
-  .heatmap-table th,
-  .heatmap-table td {
-    padding: 0.25rem;
   }
 }
 
-/* Screen-only styles for export button */
+/* Screen-only styles */
 @media screen {
   .print-only {
     display: none;
