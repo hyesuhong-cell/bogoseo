@@ -1,7 +1,11 @@
-/* Print-specific styles for report PDF export */
+/* ================================================================
+   REPORT PRINT / PDF STYLES
+   목표: 내용 잘림 없이 A4 페이지 안에 깔끔하게 출력
+   ================================================================ */
 
 @media print {
-  /* Hide sidebar, navigation, header and action buttons */
+
+  /* ── 1. 숨길 요소 (사이드바, 네비, 헤더, no-print 클래스) ─────── */
   nav,
   aside,
   header,
@@ -9,32 +13,18 @@
     display: none !important;
   }
 
-  /* Hide action/interactive buttons but NOT buttons inside tables (heatmap sort buttons) */
-  button:not(.print-keep):not(th button):not(td button):not(thead button) {
-    display: none !important;
-  }
-
-  /* Re-expose buttons that live inside table headers (heatmap column sort buttons) */
-  th button,
-  thead button {
-    display: inline-flex !important;
-    background: none !important;
-    border: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    font: inherit !important;
-    color: inherit !important;
+  /* 버튼은 전부 보이되 클릭 안 되게만 처리 (컨텐츠 손실 방지) */
+  button {
+    pointer-events: none !important;
     cursor: default !important;
-    pointer-events: none;
   }
 
-  /* Admin layout: remove flex so main fills the entire page */
+  /* ── 2. 레이아웃 : 어드민 flex → block, main 전체 너비 ────────── */
   .flex.min-h-screen,
   body > div {
     display: block !important;
   }
 
-  /* Main content takes full width */
   main {
     width: 100% !important;
     max-width: 100% !important;
@@ -43,103 +33,123 @@
     overflow: visible !important;
   }
 
-  /* Page setup */
+  /* ── 3. A4 페이지 설정 ────────────────────────────────────────── */
   @page {
-    size: A4;
-    margin: 1.5cm 2cm;
+    size: A4 portrait;
+    margin: 1.2cm 1.5cm;
   }
 
+  /* ── 4. 색상 및 배경 인쇄 보장 ────────────────────────────────── */
   body {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     color-adjust: exact;
+    background: white !important;
   }
 
-  /* ===== PAGE BREAK RULES ===== */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 
-  /* Executive Summary occupies its own page */
+  /* ── 5. 전체 콘텐츠 박스 ─────────────────────────────────────── */
+  /* p-8 → 간소화 */
+  .p-8.fade-in {
+    padding: 0 !important;
+  }
+
+  /* 각 섹션 카드 패딩 축소 */
+  [id^="sec-"],
+  #executive-summary {
+    padding: 0.6cm 0.5cm !important;
+    margin-bottom: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+
+  /* ── 6. 페이지 나눔 규칙 ─────────────────────────────────────── */
+
+  /* Executive Summary → 독립 1페이지 */
   #executive-summary {
     break-after: page;
     page-break-after: always;
   }
 
-  /* Major sections start on a new page */
+  /* 섹션별 새 페이지 시작 */
+  #sec-overview,
   #sec-participants,
   #sec-diagnosis,
   #sec-heatmap,
-  #sec-awards,
-  #sec-satisfaction,
-  #sec-followup,
-  #sec-benchmark {
+  #sec-benchmark,
+  #sec-projects,
+  #sec-evaluation,
+  #sec-feedback,
+  #sec-followup {
     break-before: page;
     page-break-before: always;
   }
 
-  /* Keep each section together; allow internal breaks only if section is too tall */
+  /* 짧은 섹션은 페이지 중간에 잘리지 않게 */
   #sec-overview,
-  #sec-participants,
-  #sec-diagnosis,
-  #sec-awards,
-  #sec-satisfaction,
-  #sec-followup,
-  #sec-benchmark {
+  #sec-evaluation {
     break-inside: avoid;
     page-break-inside: avoid;
   }
 
-  /* Heatmap is intentionally long — allow internal breaks but keep each sub-block intact */
-  #sec-heatmap .space-y-6 > div {
+  /* ── 7. 타이포그래피 축소 ────────────────────────────────────── */
+  h1 { font-size: 17pt !important; margin-bottom: 4pt !important; }
+  h2 { font-size: 12pt !important; margin-bottom: 4pt !important; }
+  h3 { font-size: 10pt !important; margin-bottom: 3pt !important; }
+
+  body, p, span, div, td, th, li {
+    font-size: 8.5pt !important;
+    line-height: 1.35 !important;
+  }
+
+  /* 아이콘 번호 뱃지 */
+  .w-7.h-7 {
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 7pt !important;
+  }
+
+  /* ── 8. 여백/간격 축소 ────────────────────────────────────────── */
+  .mb-12, .mb-10 { margin-bottom: 0.6cm !important; }
+  .mb-8           { margin-bottom: 0.4cm !important; }
+  .mb-6, .mb-5   { margin-bottom: 0.3cm !important; }
+  .mb-4, .mb-3   { margin-bottom: 0.2cm !important; }
+  .p-6, .p-5     { padding: 0.3cm !important; }
+  .p-4, .p-3     { padding: 0.2cm !important; }
+  .gap-6, .gap-5 { gap: 0.3cm !important; }
+  .gap-4, .gap-3 { gap: 0.2cm !important; }
+  .space-y-4 > * + * { margin-top: 0.2cm !important; }
+  .space-y-3 > * + * { margin-top: 0.15cm !important; }
+
+  /* ── 9. 차트 높이 축소 (recharts 고정 높이 오버라이드) ──────────── */
+  .recharts-wrapper,
+  .recharts-responsive-container {
+    max-height: 160px !important;
     break-inside: avoid;
     page-break-inside: avoid;
   }
 
-  /* Keep score bars and chart blocks together */
-  .page-break-inside-avoid,
-  .bg-slate-50.rounded-xl,
-  .recharts-wrapper {
-    break-inside: avoid;
-    page-break-inside: avoid;
+  .recharts-wrapper svg {
+    max-height: 160px !important;
   }
 
-  /* ===== SHADOWS & BORDERS ===== */
-  .shadow-xl,
-  .shadow-lg,
-  .shadow-md,
-  .shadow-sm {
-    box-shadow: none !important;
-    border: 1px solid #e2e8f0;
-  }
-
-  /* ===== COLOR BACKGROUNDS ===== */
-  .bg-gradient-to-br,
-  .bg-gradient-to-r,
-  .bg-blue-50,
-  .bg-slate-50,
-  .bg-emerald-50,
-  .bg-violet-50,
-  .bg-amber-50 {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  /* ===== CHARTS ===== */
-  svg {
-    max-width: 100%;
-    height: auto;
-  }
-
-  /* ===== HEATMAP TABLE ===== */
+  /* ── 10. 테이블 ──────────────────────────────────────────────── */
+  /* overflow-hidden / overflow-x-auto 해제 */
+  .overflow-hidden,
   .overflow-x-auto {
     overflow: visible !important;
   }
 
-  .sticky {
-    position: relative !important;
-  }
-
   table {
     width: 100% !important;
-    font-size: 8pt;
+    border-collapse: collapse !important;
+    font-size: 7.5pt !important;
   }
 
   thead {
@@ -152,63 +162,62 @@
   }
 
   th, td {
-    padding: 0.2rem 0.4rem !important;
-    font-size: 8pt;
-    line-height: 1.3;
+    padding: 3px 5px !important;
+    font-size: 7.5pt !important;
+    line-height: 1.2 !important;
   }
 
-  /* ===== TYPOGRAPHY ===== */
-  h1 { font-size: 20pt; }
-  h2 { font-size: 14pt; }
-  h3 { font-size: 11pt; }
-
-  body, p, td, th {
-    font-size: 9pt;
-    line-height: 1.4;
+  /* sticky 컬럼 print에서 normal로 */
+  .sticky {
+    position: relative !important;
   }
 
+  /* ── 11. 히트맵 특화 ─────────────────────────────────────────── */
+  /* 레벨 분포 버튼 박스 크기 축소 */
+  #sec-heatmap .grid.grid-cols-5 button,
+  #sec-heatmap .grid.grid-cols-5 > * {
+    padding: 4px !important;
+  }
+
+  #sec-heatmap .text-2xl {
+    font-size: 12pt !important;
+  }
+
+  /* 히트맵 색상 셀 크기 */
+  #sec-heatmap .w-12.h-8 {
+    width: 32px !important;
+    height: 20px !important;
+    font-size: 6.5pt !important;
+  }
+
+  /* ── 12. 그림자 / 보더 ────────────────────────────────────────── */
+  .shadow-xl, .shadow-lg, .shadow-md, .shadow-sm {
+    box-shadow: none !important;
+  }
+
+  .rounded-xl, .rounded-2xl, .rounded-lg {
+    border-radius: 4px !important;
+  }
+
+  /* ── 13. 링크 ────────────────────────────────────────────────── */
+  a {
+    text-decoration: none !important;
+    color: inherit !important;
+  }
+
+  /* ── 14. 호버 효과 제거 ──────────────────────────────────────── */
+  *:hover {
+    background-color: inherit !important;
+  }
+
+  /* ── 15. 고아 방지 ───────────────────────────────────────────── */
   p, h2, h3 {
-    widows: 3;
-    orphans: 3;
-  }
-
-  /* ===== SPACING ===== */
-  .mb-12 { margin-bottom: 1.5rem; }
-  .mb-8  { margin-bottom: 1rem; }
-  .mb-6  { margin-bottom: 0.75rem; }
-
-  /* ===== LINKS & HOVER ===== */
-  a { text-decoration: none; color: inherit; }
-  *:hover { background-color: inherit !important; }
-
-  /* ===== GRID ===== */
-  .grid { display: grid; grid-gap: 0.5rem; }
-
-  /* ===== FOOTER / HEADER ===== */
-  .print-footer {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    text-align: center;
-    font-size: 7pt;
-    color: #94a3b8;
-    padding: 0.4rem 0;
-    border-top: 1px solid #e2e8f0;
-  }
-
-  .print-header {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    background: white;
-    padding: 0.4rem 0;
-    border-bottom: 1px solid #e2e8f0;
-    font-size: 7pt;
-    color: #64748b;
+    widows: 2;
+    orphans: 2;
   }
 }
 
-/* Screen-only styles */
+/* 화면 전용 */
 @media screen {
   .print-only {
     display: none;
