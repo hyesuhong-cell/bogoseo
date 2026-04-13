@@ -1,11 +1,28 @@
 /* Print-specific styles for report PDF export */
 
 @media print {
-  /* Hide navigation and non-essential elements */
+  /* Hide sidebar, navigation, and non-essential elements */
   nav,
+  aside,
+  header,
   .no-print,
   button:not(.print-keep) {
     display: none !important;
+  }
+
+  /* Admin layout: remove flex so main fills the entire page */
+  .flex.min-h-screen,
+  body > div {
+    display: block !important;
+  }
+
+  /* Main content takes full width */
+  main {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
   }
 
   /* Page setup */
