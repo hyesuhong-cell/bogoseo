@@ -306,7 +306,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         <p className="text-sm text-slate-500 mb-5 ml-9">참가자 {diagnosed.length}명 진단 완료 (전체 {participants.length}명 중 {Math.round(diagnosed.length/participants.length*100)}%)</p>
 
         {/* 전체 성장 요약 */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-3 gap-4 mb-6 break-inside-avoid">
           <div className="bg-violet-50 rounded-xl p-4 text-center">
             <div className="text-xs text-slate-500 mb-1">사전 평균 점수</div>
             <div className="text-3xl font-bold text-slate-700">{totalPreAvg}<span className="text-sm font-normal">/5.0</span></div>
@@ -335,7 +335,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             const growth = +(post - pre).toFixed(2);
             const growthPct = pre > 0 ? Math.round((growth/pre)*100) : 0;
             return (
-              <div key={item.key} className="bg-slate-50 rounded-xl p-4">
+              <div key={item.key} className="bg-slate-50 rounded-xl p-4 break-inside-avoid">
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <span className="font-semibold text-slate-800 text-sm">{item.label}</span>
@@ -374,7 +374,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         <p className="text-sm text-slate-500 mb-5 ml-9">참가자별 5개 영역 역량 점수를 한눈에 파악할 수 있는 히트맵</p>
 
         {/* Pre Heatmap */}
-        <div className="mb-8">
+        <div className="mb-8 break-inside-avoid">
           <h3 className="text-base font-bold text-slate-700 mb-4 flex items-center gap-2">
             <span className="w-2 h-2 bg-slate-400 rounded-full"></span>
             사전 진단 (Pre)
@@ -383,7 +383,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         </div>
 
         {/* Post Heatmap */}
-        <div>
+        <div className="break-inside-avoid">
           <h3 className="text-base font-bold text-slate-700 mb-4 flex items-center gap-2">
             <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
             사후 진단 (Post)
@@ -392,8 +392,8 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         </div>
 
         {/* AS-IS / TO-BE 분석 */}
-        <div className="mt-8 grid grid-cols-3 gap-4">
-          <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-5">
+        <div className="mt-8 grid grid-cols-3 gap-4 break-inside-avoid">
+          <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-5 break-inside-avoid">
             <h4 className="text-sm font-bold text-slate-700 mb-3">AS-IS (사전)</h4>
             <div className="space-y-2">
               {[1, 2, 3, 4, 5].map(level => {
@@ -409,7 +409,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 break-inside-avoid">
             <h4 className="text-sm font-bold text-blue-700 mb-3">TO-BE (사후)</h4>
             <div className="space-y-2">
               {[1, 2, 3, 4, 5].map(level => {
@@ -425,7 +425,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-5">
+          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-5 break-inside-avoid">
             <h4 className="text-sm font-bold text-emerald-700 mb-3">전체 평균 변화량</h4>
             <div className="space-y-3">
               <div>
@@ -556,7 +556,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                   const s = team.project?.evaluationScore;
                   const total = s ? s.creativity+s.techCompletion+s.feasibility+s.teamwork+s.ux : 0;
                   return (
-                    <div key={team.id} className={`rounded-xl p-4 border-l-4 ${
+                    <div key={team.id} className={`rounded-xl p-4 border-l-4 break-inside-avoid ${
                       award === '대상' ? 'bg-yellow-50 border-yellow-400' :
                       award === '최우수상' ? 'bg-orange-50 border-orange-400' :
                       award === '우수상' ? 'bg-blue-50 border-blue-400' :
@@ -596,9 +596,9 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           참가자 피드백 및 만족도
         </h2>
 
-        <div className="grid grid-cols-3 gap-5 mb-6">
+        <div className="grid grid-cols-3 gap-5 mb-6 break-inside-avoid">
           {/* NPS */}
-          <div className="bg-slate-50 rounded-xl p-5 text-center">
+          <div className="bg-slate-50 rounded-xl p-5 text-center break-inside-avoid">
             <div className="text-xs text-slate-500 mb-1">NPS 점수 (순추천지수)</div>
             <div className="text-5xl font-bold text-blue-700 mb-2">{npsScore}</div>
             <div className="text-xs text-slate-400 mb-3">응답자 {surveys.length}명 (응답률 {Math.round(surveys.length/participants.length*100)}%)</div>
@@ -629,7 +629,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         </div>
 
         {/* 정성 피드백 */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 break-inside-avoid">
           <div>
             <h3 className="text-sm font-semibold text-emerald-700 mb-3 flex items-center gap-1.5">
               <span>✅</span> 주요 긍정 피드백
@@ -664,14 +664,14 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           후속 성과 트래킹 (3개월)
         </h2>
 
-        <div className="grid grid-cols-4 gap-4 mb-5">
+        <div className="grid grid-cols-4 gap-4 mb-5 break-inside-avoid">
           {[
             { label: '프로젝트 지속 개발', value: continuedDevCount + '팀', target: '30%+', met: continuedDevCount/Math.max(1,followUps.length) >= 0.3 },
             { label: '창업 연계', value: startupCount + '팀', target: '1건+', met: startupCount >= 1 },
             { label: '대외 수상', value: awardCount + '팀', target: '1건+', met: awardCount >= 1 },
             { label: '팔로업 응답률', value: Math.round(followUps.length/participants.length*100) + '%', target: '30%+', met: followUps.length/participants.length >= 0.3 },
           ].map(item => (
-            <div key={item.label} className={`rounded-xl p-4 text-center ${item.met ? 'bg-emerald-50' : 'bg-slate-50'}`}>
+            <div key={item.label} className={`rounded-xl p-4 text-center break-inside-avoid ${item.met ? 'bg-emerald-50' : 'bg-slate-50'}`}>
               <div className={`text-2xl font-bold mb-1 ${item.met ? 'text-emerald-600' : 'text-slate-600'}`}>{item.value}</div>
               <div className="text-xs font-semibold text-slate-600 mb-1">{item.label}</div>
               <div className="text-xs text-slate-400">목표: {item.target}</div>
