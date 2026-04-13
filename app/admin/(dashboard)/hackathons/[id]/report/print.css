@@ -72,23 +72,41 @@
     page-break-after: always;
   }
 
-  /* 섹션별 새 페이지 시작 */
-  #sec-overview,
-  #sec-participants,
+  /* 모든 섹션: 내용이 짧으면 자연스럽게 이전 섹션과 같은 페이지에 */
+  /* 단, 섹션 중간에서 잘리지 않게 break-inside: avoid */
+  [id^="sec-"] {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* 차트가 포함된 큰 섹션은 내부 break 허용 (표 행만 유지) */
   #sec-diagnosis,
+  #sec-participants,
   #sec-heatmap,
   #sec-benchmark,
   #sec-projects,
-  #sec-evaluation,
-  #sec-feedback,
-  #sec-followup {
+  #sec-feedback {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  /* 큰 섹션 내부 개별 블록은 잘리지 않게 */
+  #sec-diagnosis .bg-slate-50.rounded-xl,
+  #sec-participants .bg-blue-50,
+  #sec-feedback .bg-emerald-50,
+  #sec-feedback .bg-amber-50 {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* 히트맵: 새 페이지 시작 (항상 큼) */
+  #sec-heatmap {
     break-before: page;
     page-break-before: always;
   }
 
-  /* 짧은 섹션은 페이지 중간에 잘리지 않게 */
-  #sec-overview,
-  #sec-evaluation {
+  /* 차트 컨테이너 잘리지 않게 */
+  .recharts-wrapper {
     break-inside: avoid;
     page-break-inside: avoid;
   }
