@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 
 const surveyItems = [
@@ -11,23 +12,45 @@ const surveyItems = [
   { key: 'rewillingness', label: '재참여 의향', desc: '다음 해커톤에도 참여하고 싶으신가요?' },
 ];
 
-const ratingLabels = ['매우 불만족', '불만족', '보통', '만족', '매우 만족'];
-const npsLabels = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
-
 export default function SurveyPage() {
+  const { data: session } = useSession();
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [nps, setNps] = useState<number | null>(null);
   const [positive, setPositive] = useState('');
   const [improvement, setImprovement] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const totalQuestions = surveyItems.length + 1; // +1 for NPS
   const answered = Object.keys(ratings).length + (nps !== null ? 1 : 0);
   const progress = Math.round((answered / totalQuestions) * 100);
   const canSubmit = Object.keys(ratings).length === surveyItems.length && nps !== null;
 
-  const handleSubmit = () => {
-    if (canSubmit) setSubmitted(true);
+  const handleSubmit = async () => {
+    if (!canSubmit) return;
+
+    const user = session?.user as { participantId?: string; hackathonId?: string } | undefined;
+    if (user?.participantId && user?.hackathonId) {
+      setSaving(true);
+      try {
+        await fetch('/api/survey', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            hackathonId: user.hackathonId,
+            ratings,
+            nps,
+            positive,
+            improvement,
+          }),
+        });
+      } catch {
+        // 저장 실패해도 UI는 계속 진행
+      }
+      setSaving(false);
+    }
+
+    setSubmitted(true);
   };
 
   if (submitted) {
@@ -191,12 +214,12 @@ export default function SurveyPage() {
 
       <button
         onClick={handleSubmit}
-        disabled={!canSubmit}
+        disabled={!canSubmit || saving}
         className={`w-full py-4 rounded-xl font-bold text-base transition-colors ${
-          canSubmit ? 'bg-pink-600 text-white hover:bg-pink-700' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+          canSubmit && !saving ? 'bg-pink-600 text-white hover:bg-pink-700' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
         }`}
       >
-        {canSubmit ? '설문 제출하기 💌' : `${totalQuestions - answered}개 항목을 더 응답해주세요`}
+        {saving ? '저장 중...' : canSubmit ? '설문 제출하기 💌' : `${totalQuestions - answered}개 항목을 더 응답해주세요`}
       </button>
     </div>
   );

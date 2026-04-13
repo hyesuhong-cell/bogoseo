@@ -78,6 +78,32 @@ export async function countParticipantsPerHackathon(hackathonIds: string[]): Pro
   return counts;
 }
 
+export async function findUserById(id: string): Promise<RegisteredUser | undefined> {
+  const { data, error } = await supabase
+    .from('registered_participants')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return undefined;
+    throw new Error(`[findUserById] ${error.message} (code: ${error.code})`);
+  }
+  if (!data) return undefined;
+  return {
+    id: data.id,
+    name: data.name,
+    email: data.email ?? '',
+    studentId: data.student_id,
+    hackathonId: data.hackathon_id,
+    major: data.department ?? '',
+    grade: data.grade ?? 1,
+    gender: data.gender ?? '',
+    passwordHash: data.password_hash,
+    registeredAt: data.created_at,
+  };
+}
+
 export async function isStudentIdTaken(studentId: string): Promise<boolean> {
   const { count } = await supabase
     .from('registered_participants')
