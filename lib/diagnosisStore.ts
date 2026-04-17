@@ -78,6 +78,42 @@ export interface DiagnosisAggStats {
   postAvg: DiagnosisScores | null;
 }
 
+// 해커톤의 참가자별 사전/사후 진단 점수 반환 (리포트용)
+export interface ParticipantDiagnosis {
+  participantId: string;
+  pre: DiagnosisScores | null;
+  post: DiagnosisScores | null;
+}
+
+export async function getHackathonParticipantDiagnoses(hackathonId: string): Promise<ParticipantDiagnosis[]> {
+  const { data } = await supabase
+    .from('diagnosis_results')
+    .select('participant_id, type, scores')
+    .eq('hackathon_id', hackathonId);
+
+  if (!data || data.length === 0) return [];
+
+  const map = new Map<string, ParticipantDiagnosis>();
+  data.forEach(row => {
+    if (!map.has(row.participant_id)) {
+      map.set(row.participant_id, { participantId: row.participant_id, pre: null, post: null });
+    }
+    const entry = map.get(row.participant_id)!;
+    const s = row.scores as Record<string, number>;
+    const scores: DiagnosisScores = {
+      aiUnderstanding: s.aiUnderstanding ?? 0,
+      toolUsage:       s.toolUsage      ?? 0,
+      problemSolving:  s.problemSolving ?? 0,
+      collaboration:   s.collaboration  ?? 0,
+      ethics:          s.ethics         ?? 0,
+    };
+    if (row.type === 'pre') entry.pre = scores;
+    else entry.post = scores;
+  });
+
+  return Array.from(map.values());
+}
+
 export async function getHackathonDiagnosisStats(hackathonIds: string[]): Promise<DiagnosisAggStats> {
   if (hackathonIds.length === 0) return { diagnosedCount: 0, preAvg: null, postAvg: null };
 

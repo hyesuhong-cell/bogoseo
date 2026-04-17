@@ -8,17 +8,89 @@ import CompetencyHeatmap from '@/components/CompetencyHeatmap';
 import BenchmarkComparison from '@/components/BenchmarkComparison';
 import ReportActions from '@/components/ReportActions';
 import { ReportData } from '@/lib/pdfExport';
+import { getHackathon } from '@/lib/hackathonStore';
+import { listParticipantsByHackathon } from '@/lib/userStore';
+import { getHackathonParticipantDiagnoses } from '@/lib/diagnosisStore';
+import type { Participant, DiagnosisScore, HackathonCategory } from '@/lib/types';
 import './print.css';
+
+export const dynamic = 'force-dynamic';
 
 export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const hackathon = mockHackathons.find(h => h.id === id);
-  if (!hackathon) notFound();
 
-  const participants = mockParticipants.filter(p => p.hackathonId === id);
-  const teams = mockTeams.filter(t => t.hackathonId === id);
-  const surveys = mockSurveys.filter(s => s.hackathonId === id);
-  const followUps = mockFollowUps.filter(f => f.hackathonId === id);
+  // mock 우선, 없으면 DB 조회
+  const mockHackathon = mockHackathons.find(h => h.id === id);
+  const dbHackathon = mockHackathon ? null : await getHackathon(id);
+  if (!mockHackathon && !dbHackathon) notFound();
+
+  const isDbHackathon = !mockHackathon;
+
+  // 해커톤 정보 정규화
+  const hackathon = mockHackathon ?? {
+    id: dbHackathon!.id,
+    name: dbHackathon!.name,
+    university: dbHackathon!.university,
+    theme: dbHackathon!.theme ?? '해커톤',
+    startDate: dbHackathon!.startDate,
+    endDate: dbHackathon!.endDate,
+    venue: dbHackathon!.venue ?? '대학 내',
+    host: (dbHackathon as { host?: string })?.host ?? '주최기관',
+    organizer: (dbHackathon as { organizer?: string })?.organizer ?? '운영기관',
+    status: dbHackathon!.status,
+    category: (dbHackathon!.category ?? '사회문제해결') as HackathonCategory,
+    description: (dbHackathon as { description?: string })?.description ?? '',
+    maxTeams: (dbHackathon as { maxTeams?: number })?.maxTeams ?? 20,
+    maxMembersPerTeam: 5,
+    tracks: (dbHackathon as { tracks?: { id: string; name: string; description: string }[] })?.tracks ?? [],
+  };
+
+  // 참가자 / 팀 / 설문 / 팔로업 — mock은 그대로, DB는 실데이터로 변환
+  let participants: Participant[];
+  let teams: typeof mockTeams;
+  let surveys: typeof mockSurveys;
+  let followUps: typeof mockFollowUps;
+
+  if (!isDbHackathon) {
+    participants = mockParticipants.filter(p => p.hackathonId === id);
+    teams       = mockTeams.filter(t => t.hackathonId === id);
+    surveys     = mockSurveys.filter(s => s.hackathonId === id);
+    followUps   = mockFollowUps.filter(f => f.hackathonId === id);
+  } else {
+    // DB 참가자 조회
+    const dbParts = await listParticipantsByHackathon(id);
+    // DB 진단 결과 조회
+    const diagResults = await getHackathonParticipantDiagnoses(id);
+    const diagMap = new Map(diagResults.map(d => [d.participantId, d]));
+
+    participants = dbParts.map(p => {
+      const diag = diagMap.get(p.id);
+      // DB scores: aiUnderstanding → understanding (mock DiagnosisScore 호환)
+      type DbScores = { aiUnderstanding: number; toolUsage: number; problemSolving: number; collaboration: number; ethics: number } | null | undefined;
+      const toScore = (s: DbScores): DiagnosisScore | undefined =>
+        s ? { understanding: s.aiUnderstanding, toolUsage: s.toolUsage, problemSolving: s.problemSolving, collaboration: s.collaboration, ethics: s.ethics, completedAt: '' } : undefined;
+
+      return {
+        id: p.id,
+        hackathonId: id,
+        name: p.name,
+        studentId: p.studentId,
+        email: p.email ?? '',
+        major: p.major || '컴퓨터공학',
+        majorCategory: '공학(컴퓨터·전자)' as const,
+        grade: (p.grade ?? 2) as 1|2|3|4,
+        gender: (p.gender ?? '남성') as '남성'|'여성',
+        isExternal: false,
+        preScore:  toScore(diag?.pre),
+        postScore: toScore(diag?.post),
+        surveyCompleted: false,
+        registeredAt: new Date().toISOString(),
+      };
+    });
+    teams     = [];
+    surveys   = [];
+    followUps = [];
+  }
 
   const diagnosed = participants.filter(p => p.preScore && p.postScore);
   const submittedTeams = teams.filter(t => t.project);
@@ -199,6 +271,18 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         <span className="text-slate-800 font-medium">성과 추적 리포트</span>
       </div>
 
+      {/* DB 해커톤 안내 배너 (인쇄 숨김) */}
+      {isDbHackathon && (
+        <div className="no-print mb-6 flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl px-5 py-4 text-sm text-blue-800">
+          <span className="text-lg">ℹ️</span>
+          <div>
+            <span className="font-semibold">실제 운영 데이터 기반 리포트입니다.</span>{' '}
+            사전/사후 진단 완료 참가자 데이터가 수집될수록 모든 섹션이 자동으로 채워집니다.
+            {diagnosed.length === 0 && ' 현재 진단 완료 인원이 없어 일부 섹션이 비어 있습니다.'}
+          </div>
+        </div>
+      )}
+
       {/* Header with Export Actions (인쇄 숨김) */}
       <div className="no-print flex items-center justify-between mb-8">
         <div>
@@ -223,7 +307,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           preAvg={totalPreAvg}
           postAvg={totalPostAvg}
           submitRate={submitRate}
-          impactStatement={`참가 학생의 AI 역량이 평균 ${growthRate}% 향상되었으며, ${Math.round(participantCompetencyPost.filter(p => p.level >= 3).length / participantCompetencyPost.length * 100)}%가 중급 이상 수준에 도달했습니다.`}
+          impactStatement={`참가 학생의 AI 역량이 평균 ${growthRate}% 향상되었으며, ${participantCompetencyPost.length > 0 ? Math.round(participantCompetencyPost.filter(p => p.level >= 3).length / participantCompetencyPost.length * 100) : 0}%가 중급 이상 수준에 도달했습니다.`}
           nextAction="연간 계약 시 타 대학 벤치마크 데이터 포함 제공 및 6개월 후속 추적 시스템 자동화"
         />
       </div>
@@ -280,11 +364,11 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         {/* 핵심 지표 요약 */}
         <div className="grid grid-cols-5 gap-3 mb-6">
           {[
-            { label: '총 참가자 수', value: participants.length + '명', note: `목표 대비 ${Math.round(participants.length/hackathon.maxTeams*5*100)}%` },
-            { label: '참가 팀 수', value: teams.length + '팀', note: `팀당 평균 ${+(participants.length/teams.length).toFixed(1)}명` },
+            { label: '총 참가자 수', value: participants.length + '명', note: hackathon.maxTeams > 0 ? `목표 대비 ${Math.round(participants.length/hackathon.maxTeams*5*100)}%` : '-' },
+            { label: '참가 팀 수', value: teams.length + '팀', note: teams.length > 0 ? `팀당 평균 ${+(participants.length/teams.length).toFixed(1)}명` : '-' },
             { label: '프로젝트 제출', value: submittedTeams.length + '건', note: `제출률 ${submitRate}%` },
             { label: '참가 학과 수', value: [...new Set(participants.map(p=>p.major))].length + '개', note: `비CS ${participants.filter(p=>p.majorCategory!=='공학(컴퓨터·전자)').length}명 포함` },
-            { label: '외부 참가자', value: participants.filter(p=>p.isExternal).length + '명', note: `전체 ${Math.round(participants.filter(p=>p.isExternal).length/participants.length*100)}%` },
+            { label: '외부 참가자', value: participants.filter(p=>p.isExternal).length + '명', note: participants.length > 0 ? `전체 ${Math.round(participants.filter(p=>p.isExternal).length/participants.length*100)}%` : '-' },
           ].map(item => (
             <div key={item.label} className="bg-blue-50 rounded-lg p-3 text-center">
               <div className="text-xl font-bold text-blue-700 mb-0.5">{item.value}</div>
@@ -303,7 +387,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           <span className="w-7 h-7 bg-violet-100 text-violet-700 rounded-lg flex items-center justify-center text-sm font-bold">3</span>
           AI 역량 사전/사후 진단 결과
         </h2>
-        <p className="text-sm text-slate-500 mb-5 ml-9">참가자 {diagnosed.length}명 진단 완료 (전체 {participants.length}명 중 {Math.round(diagnosed.length/participants.length*100)}%)</p>
+        <p className="text-sm text-slate-500 mb-5 ml-9">참가자 {diagnosed.length}명 진단 완료 (전체 {participants.length}명 중 {participants.length > 0 ? Math.round(diagnosed.length/participants.length*100) : 0}%)</p>
 
         {/* 전체 성장 요약 */}
         <div className="grid grid-cols-3 gap-4 mb-6 break-inside-avoid">
@@ -398,7 +482,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             <div className="space-y-2">
               {[1, 2, 3, 4, 5].map(level => {
                 const count = participantCompetencyPre.filter(p => p.level === level).length;
-                const pct = (count / participantCompetencyPre.length * 100).toFixed(1);
+                const pct = participantCompetencyPre.length > 0 ? (count / participantCompetencyPre.length * 100).toFixed(1) : '0.0';
                 return (
                   <div key={level} className="flex items-center justify-between text-sm">
                     <span className="text-slate-600">Lv.{level}</span>
@@ -414,7 +498,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             <div className="space-y-2">
               {[1, 2, 3, 4, 5].map(level => {
                 const count = participantCompetencyPost.filter(p => p.level === level).length;
-                const pct = (count / participantCompetencyPost.length * 100).toFixed(1);
+                const pct = participantCompetencyPost.length > 0 ? (count / participantCompetencyPost.length * 100).toFixed(1) : '0.0';
                 return (
                   <div key={level} className="flex items-center justify-between text-sm">
                     <span className="text-blue-600">Lv.{level}</span>
@@ -431,17 +515,17 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
               <div>
                 <div className="text-xs text-slate-500 mb-1">Lv.3 이상 비율</div>
                 <div className="text-2xl font-bold text-emerald-700">
-                  {Math.round(participantCompetencyPre.filter(p => p.level >= 3).length / participantCompetencyPre.length * 100)}%
+                  {participantCompetencyPre.length > 0 ? Math.round(participantCompetencyPre.filter(p => p.level >= 3).length / participantCompetencyPre.length * 100) : 0}%
                   <span className="text-sm mx-2">→</span>
-                  {Math.round(participantCompetencyPost.filter(p => p.level >= 3).length / participantCompetencyPost.length * 100)}%
+                  {participantCompetencyPost.length > 0 ? Math.round(participantCompetencyPost.filter(p => p.level >= 3).length / participantCompetencyPost.length * 100) : 0}%
                 </div>
               </div>
               <div>
                 <div className="text-xs text-slate-500 mb-1">평균 레벨</div>
                 <div className="text-2xl font-bold text-emerald-700">
-                  {(participantCompetencyPre.reduce((sum, p) => sum + p.level, 0) / participantCompetencyPre.length).toFixed(1)}
+                  {participantCompetencyPre.length > 0 ? (participantCompetencyPre.reduce((sum, p) => sum + p.level, 0) / participantCompetencyPre.length).toFixed(1) : '-'}
                   <span className="text-sm mx-2">→</span>
-                  {(participantCompetencyPost.reduce((sum, p) => sum + p.level, 0) / participantCompetencyPost.length).toFixed(1)}
+                  {participantCompetencyPost.length > 0 ? (participantCompetencyPost.reduce((sum, p) => sum + p.level, 0) / participantCompetencyPost.length).toFixed(1) : '-'}
                 </div>
               </div>
             </div>
@@ -601,7 +685,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           <div className="bg-slate-50 rounded-xl p-5 text-center break-inside-avoid">
             <div className="text-xs text-slate-500 mb-1">NPS 점수 (순추천지수)</div>
             <div className="text-5xl font-bold text-blue-700 mb-2">{npsScore}</div>
-            <div className="text-xs text-slate-400 mb-3">응답자 {surveys.length}명 (응답률 {Math.round(surveys.length/participants.length*100)}%)</div>
+            <div className="text-xs text-slate-400 mb-3">응답자 {surveys.length}명 (응답률 {participants.length > 0 ? Math.round(surveys.length/participants.length*100) : 0}%)</div>
             <div className={`text-xs font-semibold px-3 py-1 rounded-full inline-block ${
               npsScore >= 50 ? 'bg-emerald-100 text-emerald-700' :
               npsScore >= 20 ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
@@ -669,7 +753,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             { label: '프로젝트 지속 개발', value: continuedDevCount + '팀', target: '30%+', met: continuedDevCount/Math.max(1,followUps.length) >= 0.3 },
             { label: '창업 연계', value: startupCount + '팀', target: '1건+', met: startupCount >= 1 },
             { label: '대외 수상', value: awardCount + '팀', target: '1건+', met: awardCount >= 1 },
-            { label: '팔로업 응답률', value: Math.round(followUps.length/participants.length*100) + '%', target: '30%+', met: followUps.length/participants.length >= 0.3 },
+            { label: '팔로업 응답률', value: (participants.length > 0 ? Math.round(followUps.length/participants.length*100) : 0) + '%', target: '30%+', met: participants.length > 0 && followUps.length/participants.length >= 0.3 },
           ].map(item => (
             <div key={item.label} className={`rounded-xl p-4 text-center break-inside-avoid ${item.met ? 'bg-emerald-50' : 'bg-slate-50'}`}>
               <div className={`text-2xl font-bold mb-1 ${item.met ? 'text-emerald-600' : 'text-slate-600'}`}>{item.value}</div>

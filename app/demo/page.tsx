@@ -100,9 +100,9 @@ export default function DemoPage() {
             대학 실무진에게 신뢰할 수 있는 성과 데이터를 제공합니다.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="#demo" className="bg-white text-blue-700 px-8 py-4 rounded-2xl font-bold text-base hover:bg-blue-50 transition-colors shadow-lg">
-              🚀 지금 데모 체험하기
-            </a>
+            <Link href="/demo/dashboard" className="bg-white text-blue-700 px-8 py-4 rounded-2xl font-bold text-base hover:bg-blue-50 transition-colors shadow-lg">
+              🚀 로그인 없이 바로 체험하기
+            </Link>
             <a href="#features" className="bg-white/15 backdrop-blur-sm text-white px-8 py-4 rounded-2xl font-semibold text-base hover:bg-white/25 transition-colors border border-white/20">
               주요 기능 살펴보기 ↓
             </a>
@@ -192,6 +192,108 @@ export default function DemoPage() {
         </div>
       </section>
 
+      {/* ── 체험 가이드 ─────────────────────────── */}
+      <section className="py-20 px-6 bg-white border-t border-slate-100">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl font-bold text-slate-900 mb-3">이렇게 체험해보세요</h2>
+            <p className="text-slate-500">로그인 후 아래 순서대로 클릭하면 핵심 기능을 5분 안에 파악할 수 있습니다</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-10">
+            {/* 어드민 체험 경로 */}
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-sm">A</div>
+                <div>
+                  <div className="font-bold text-slate-900">운영진 체험 경로</div>
+                  <div className="text-xs text-slate-400">admin@udimpact.kr / admin1234</div>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {[
+                  { step: 1, label: '대시보드 확인', desc: 'KPI 카드 & 해커톤 목록 — 로그인 불필요', href: '/demo/dashboard', badge: '미리보기' },
+                  { step: 2, label: '성과 리포트 보기', desc: 'AI 역량 진단 결과 & 히트맵 — 로그인 불필요', href: '/demo/report', badge: '핵심!' },
+                  { step: 3, label: '로그인 후 실제 사용', desc: '참가자 관리·PDF 발행 등 전체 기능', href: '/admin/login', badge: '어드민' },
+                  { step: 4, label: 'PDF 발행', desc: '어드민 리포트 페이지 우상단 → 인쇄', href: '/admin/login', badge: 'PDF' },
+                  { step: 5, label: '참가자 역량 진단 관리', desc: '사전/사후 완료 현황 & 통계', href: '/admin/login', badge: '' },
+                ].map(item => (
+                  <a
+                    key={item.step}
+                    href={item.href}
+                    className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-all group"
+                  >
+                    <div className="w-8 h-8 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                      {item.step}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-slate-800 text-sm group-hover:text-blue-700 transition-colors">{item.label}</div>
+                      <div className="text-xs text-slate-400">{item.desc}</div>
+                    </div>
+                    {item.badge && (
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0 ${
+                        item.badge === '핵심!' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'
+                      }`}>{item.badge}</span>
+                    )}
+                    <span className="text-slate-300 group-hover:text-blue-400 transition-colors">→</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* 참가자 체험 경로 */}
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-cyan-500 rounded-xl flex items-center justify-center text-white font-bold text-sm">P</div>
+                <div>
+                  <div className="font-bold text-slate-900">참가자 체험 경로</div>
+                  <div className="text-xs text-slate-400">학번 2021001001 / test1234</div>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {[
+                  { step: 1, label: '참가자 홈', desc: '진행 단계 & 해커톤 현황 확인', href: '/participant', badge: '메인' },
+                  { step: 2, label: '사전 AI 역량 진단', desc: '5개 영역 10문항 응답', href: '/participant/pre-diagnosis', badge: '' },
+                  { step: 3, label: '사후 AI 역량 진단', desc: '동일 문항으로 성장 측정', href: '/participant/post-diagnosis', badge: '' },
+                  { step: 4, label: '만족도 설문', desc: 'NPS & 항목별 만족도 응답', href: '/participant/survey', badge: '' },
+                  { step: 5, label: '나의 성장 리포트', desc: '사전→사후 역량 변화 확인', href: '/participant/my-result', badge: '핵심!' },
+                ].map(item => (
+                  <a
+                    key={item.step}
+                    href={item.href}
+                    className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-cyan-200 hover:bg-cyan-50 transition-all group"
+                  >
+                    <div className="w-8 h-8 bg-cyan-100 text-cyan-700 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 group-hover:bg-cyan-500 group-hover:text-white transition-colors">
+                      {item.step}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-slate-800 text-sm group-hover:text-cyan-700 transition-colors">{item.label}</div>
+                      <div className="text-xs text-slate-400">{item.desc}</div>
+                    </div>
+                    {item.badge && (
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0 ${
+                        item.badge === '핵심!' ? 'bg-cyan-500 text-white' : 'bg-slate-100 text-slate-500'
+                      }`}>{item.badge}</span>
+                    )}
+                    <span className="text-slate-300 group-hover:text-cyan-400 transition-colors">→</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-10 p-5 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3 text-sm">
+            <span className="text-xl flex-shrink-0">💡</span>
+            <div className="text-amber-800">
+              <span className="font-semibold">참가자 성장 리포트 체험 팁:</span>{' '}
+              처음 로그인 시 진단 데이터가 없을 수 있습니다.{' '}
+              <a href="/api/seed-demo" target="_blank" className="underline font-semibold hover:text-amber-600">여기를 클릭</a>해서
+              데모 데이터를 먼저 삽입한 뒤 성장 리포트를 확인하세요.
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── 데모 체험 ───────────────────────────── */}
       <section id="demo" className="py-20 px-6 bg-slate-900">
         <div className="max-w-4xl mx-auto">
@@ -273,12 +375,12 @@ export default function DemoPage() {
             아래 버튼으로 문의주시면 빠르게 답변드립니다.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="#demo"
+            <Link
+              href="/demo/dashboard"
               className="bg-white text-blue-700 px-8 py-4 rounded-2xl font-bold hover:bg-blue-50 transition-colors"
             >
-              🚀 데모 체험하기
-            </a>
+              🚀 로그인 없이 체험하기
+            </Link>
             <a
               href="mailto:contact@udimpact.kr"
               className="bg-white/20 text-white px-8 py-4 rounded-2xl font-semibold hover:bg-white/30 transition-colors border border-white/30"

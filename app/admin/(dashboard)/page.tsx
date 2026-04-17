@@ -19,11 +19,8 @@ export default async function AdminDashboard() {
   const dbHackathons = await listHackathons(role === 'superadmin' ? undefined : university);
   const dbHackathonIds = new Set(dbHackathons.map(h => h.id));
 
-  // mock 해커톤 (DB에 없는 것만)
-  const filteredMock = role === 'superadmin'
-    ? mockHackathons
-    : mockHackathons.filter(h => h.university === university);
-  const mockOnlyHackathons = filteredMock.filter(h => !dbHackathonIds.has(h.id));
+  // mock 해커톤 (DB에 없는 것만, 대학 무관하게 모두 표시 — 샘플 데이터로 데모 활용)
+  const mockOnlyHackathons = mockHackathons.filter(h => !dbHackathonIds.has(h.id));
 
   // 전체 해커톤 목록 (DB 우선, mock 보완)
   const allHackathons = [
