@@ -80,8 +80,12 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* 슈퍼어드민 입장 */}
-        <div className="text-center mb-6">
+        {/* 하단 링크 */}
+        <div className="text-center mb-6 flex items-center justify-center gap-6">
+          <Link href="/demo" className="text-cyan-300/70 hover:text-cyan-200 text-xs transition-colors font-medium">
+            📋 데모 소개 페이지 →
+          </Link>
+          <span className="text-white/10">|</span>
           <Link href="/superadmin/login" className="text-white/30 hover:text-white/60 text-xs transition-colors">
             UD임팩트 내부 관리자 →
           </Link>
