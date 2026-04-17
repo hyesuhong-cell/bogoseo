@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { mockHackathons, mockParticipants, mockTeams, mockSurveys, mockFollowUps, mockBenchmarkData } from '@/lib/mockData';
 import { notFound } from 'next/navigation';
-import ReportCharts from '@/app/admin/(dashboard)/hackathons/[id]/report/ReportCharts';
+import ReportCharts from '@/components/ReportCharts';
 import ExecutiveSummary from '@/components/ExecutiveSummary';
 import CompetencyHeatmap from '@/components/CompetencyHeatmap';
 import BenchmarkComparison from '@/components/BenchmarkComparison';
